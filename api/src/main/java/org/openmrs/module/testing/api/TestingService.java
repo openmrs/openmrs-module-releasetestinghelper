@@ -15,6 +15,9 @@ package org.openmrs.module.testing.api;
 
 import java.io.InputStream;
 
+import org.openmrs.Patient;
+import org.springframework.transaction.annotation.Transactional;
+
 /**
  * Contains methods exposing the core functionality.
  * <p>
@@ -34,4 +37,22 @@ public interface TestingService {
 	 * @should return test data set
 	 */
 	InputStream getTestDataSet();
+	
+	/**
+	 * Gets the patient with the biggest number of encounters.
+	 * 
+	 * @return the patient with the biggest number of encounters.
+	 * @should get patient with most encounters.
+	 */
+	@Transactional(readOnly = true)
+	public Patient getPatientWithMostEncounters();
+	
+	/**
+	 * Gets the patient with the biggest number of observations.
+	 * 
+	 * @return the patient with the biggest number of observations.
+	 * @should get patient with most obs.
+	 */
+	@Transactional(readOnly = true)
+	public Patient getPatientWithMostObs();
 }

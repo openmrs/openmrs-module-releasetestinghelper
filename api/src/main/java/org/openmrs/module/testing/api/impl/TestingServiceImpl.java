@@ -15,6 +15,8 @@ package org.openmrs.module.testing.api.impl;
 
 import java.io.InputStream;
 
+import org.openmrs.Patient;
+import org.openmrs.api.context.Context;
 import org.openmrs.module.testing.api.TestingService;
 import org.openmrs.module.testing.api.db.TestingDao;
 
@@ -36,4 +38,27 @@ public class TestingServiceImpl implements TestingService {
 		return dao.getTestDataSet();
 	}
 	
+	/**
+     * @see org.openmrs.module.testing.TestingService#getPatientWithMostEncounters()
+     */
+	public Patient getPatientWithMostEncounters(){
+		Integer patientId = dao.getPatientWithMostEncounters();
+		if (patientId != null) {
+			return Context.getPatientService().getPatient(patientId);
+		}
+		
+		return null;
+	}
+	
+	/**
+     * @see org.openmrs.module.testing.TestingService#getPatientWithMostObs()
+     */
+	public Patient getPatientWithMostObs() {
+		Integer patientId = dao.getPatientWithMostEncounters();
+		if (patientId != null) {
+			return Context.getPatientService().getPatient(patientId);
+		}
+		
+		return null;
+	}
 }
