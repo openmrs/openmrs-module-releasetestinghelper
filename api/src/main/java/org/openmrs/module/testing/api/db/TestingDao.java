@@ -27,4 +27,13 @@ public interface TestingDao {
 	 */
 	InputStream getTestDataSet();
 	
+	/**
+     * @see TestingService#getPatientWithMostEncounters()
+     */
+	public Integer getPatientWithMostEncounters();
+	
+	/**
+     * @see TestingService#getPatientWithMostObs()
+     */
+	public Integer getPatientWithMostObs();
 }

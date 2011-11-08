@@ -36,4 +36,35 @@ public class HibernateTestingDao implements TestingDao {
 	public InputStream getTestDataSet() {
 		throw new NotImplementedException();
 	}
+	
+	/**
+     * @see TestingDAO#getPatientWithMostEncounters()
+     */
+    public Integer getPatientWithMostEncounters(){
+    	
+    	String sql = "select patient_id from encounter " +
+			"group by patient_id " +
+			"having count(patient_id) =  " +
+			"(select max(the_count) from (select patient_id, count(patient_id) as the_count from encounter " +
+			"group by patient_id) as t) limit 1";
+    	
+    	return (Integer)sessionFactory.getCurrentSession().createSQLQuery(sql).uniqueResult();
+    }
+	
+    /**
+     * @see TestingDAO#getPatientWithMostObs()
+     */
+	public Integer getPatientWithMostObs(){
+		
+		String sql = "select patient_id from encounter e inner join obs o " +
+			"on e.encounter_id = o.encounter_id " +
+			"group by patient_id " +
+			"having count(obs_id) =  " +
+			"(select max(the_count) from  " +
+			"(select patient_id, count(obs_id) as the_count from encounter e " +
+			"inner join obs o on e.encounter_id = o.encounter_id " +
+			"group by patient_id) as t) limit 1";
+	
+		return (Integer)sessionFactory.getCurrentSession().createSQLQuery(sql).uniqueResult();
+	}
 }
