@@ -1,4 +1,4 @@
-package org.openmrs.module.web.controller;
+package org.openmrs.module.testing.web.controller;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -8,7 +8,8 @@ import java.io.OutputStream;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.openmrs.api.APIException;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.testing.api.TestingService;
@@ -23,7 +24,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @Controller
 public class TestingController {
 	
-	protected final Logger log = Logger.getLogger(getClass());
+	protected final Log log = LogFactory.getLog(getClass());
 	
 	/**
 	 * Generates a test data set which is packaged in a zip file.

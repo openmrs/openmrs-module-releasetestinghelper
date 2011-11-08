@@ -1,4 +1,4 @@
-package org.openmrs.module.web.dwr;
+package org.openmrs.module.testing.web.dwr;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

@@ -11,7 +11,7 @@
  *
  * Copyright (C) OpenMRS, LLC.  All Rights Reserved.
  */
-package org.openmrs.module.web.controller;
+package org.openmrs.module.testing.web.controller;
 
 import javax.servlet.http.HttpServletResponse;
 
