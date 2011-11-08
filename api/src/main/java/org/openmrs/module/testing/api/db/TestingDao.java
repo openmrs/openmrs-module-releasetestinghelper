@@ -13,7 +13,8 @@
  */
 package org.openmrs.module.testing.api.db;
 
-import java.io.InputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 
 import org.openmrs.module.testing.api.TestingService;
 
@@ -23,9 +24,9 @@ import org.openmrs.module.testing.api.TestingService;
 public interface TestingDao {
 	
 	/**
-	 * @see TestingService#getTestDataSet()
+	 * @see TestingService#generateTestDataSet(OutputStream)
 	 */
-	InputStream getTestDataSet();
+	void generateTestDataSet(OutputStream out) throws IOException;
 	
 	/**
      * @see TestingService#getPatientWithMostEncounters()

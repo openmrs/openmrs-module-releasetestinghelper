@@ -11,27 +11,23 @@
  *
  * Copyright (C) OpenMRS, LLC.  All Rights Reserved.
  */
-package org.openmrs.module.testing.api;
+package org.openmrs.module.web.controller;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.openmrs.api.context.Context;
-import org.openmrs.test.BaseModuleContextSensitiveTest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
- * Functional tests for {@link TestingService}.
+ * Prepares response headers for writing different data.
  */
-public class TestingServiceTest extends BaseModuleContextSensitiveTest {
+public class ResponseUtil {
 	
-	private TestingService service;
-	
-	@Before
-	public void before() {
-		service = Context.getService(TestingService.class);
+	private ResponseUtil() {
 	}
 	
-	@Test
-	public void init() {
-		
+	public static void prepareZipResponse(HttpServletResponse response, String filename) {
+		response.setContentType("application/zip");
+		response.setHeader("Content-Disposition", "attachment; filename=" + filename + ".zip");
+		response.setHeader("Pragma", "No-cache");
+		response.setDateHeader("Expires", 0);
+		response.setHeader("Cache-Control", "no-cache");
 	}
 }

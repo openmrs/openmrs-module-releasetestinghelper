@@ -13,9 +13,10 @@
  */
 package org.openmrs.module.testing.api;
 
-import java.io.InputStream;
+import java.io.OutputStream;
 
 import org.openmrs.Patient;
+import org.openmrs.api.APIException;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -33,10 +34,10 @@ public interface TestingService {
 	/**
 	 * Generates an SQL dump with test data and metadata.
 	 * 
-	 * @return the sql dump
-	 * @should return test data set
+	 * @param out the target
+	 * @throws APIException
 	 */
-	InputStream getTestDataSet();
+	void generateTestDataSet(OutputStream out) throws APIException;
 	
 	/**
 	 * Gets the patient with the biggest number of encounters.

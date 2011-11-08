@@ -13,9 +13,11 @@
  */
 package org.openmrs.module.testing.api.impl;
 
-import java.io.InputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 
 import org.openmrs.Patient;
+import org.openmrs.api.APIException;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.testing.api.TestingService;
 import org.openmrs.module.testing.api.db.TestingDao;
@@ -34,8 +36,13 @@ public class TestingServiceImpl implements TestingService {
 		this.dao = dao;
 	}
 	
-	public InputStream getTestDataSet() {
-		return dao.getTestDataSet();
+	public void generateTestDataSet(OutputStream out) throws APIException {
+		try {
+	        dao.generateTestDataSet(out);
+        }
+        catch (IOException e) {
+	        throw new APIException(e);
+        }
 	}
 	
 	/**
