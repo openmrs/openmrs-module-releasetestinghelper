@@ -24,6 +24,11 @@ public class TestingController {
 	
 	protected final Log log = LogFactory.getLog(getClass());
 	
+	@RequestMapping(value = "/module/testing/settings", method = RequestMethod.GET)
+	public void showSettings() {
+		
+	}
+	
 	/**
 	 * Generates a test data set which is packaged in a zip file.
 	 * 
