@@ -13,14 +13,18 @@
  */
 package org.openmrs.module.testing.api.impl;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 
 import org.openmrs.Patient;
 import org.openmrs.api.APIException;
 import org.openmrs.api.context.Context;
+import org.openmrs.module.ModuleConstants;
 import org.openmrs.module.testing.api.TestingService;
 import org.openmrs.module.testing.api.db.TestingDao;
+import org.openmrs.module.testing.util.TestingUtil;
+import org.openmrs.util.OpenmrsUtil;
 
 /**
  * Implements {@link TestingService}.
@@ -67,5 +71,13 @@ public class TestingServiceImpl implements TestingService {
 		}
 		
 		return null;
+	}
+	
+	/**
+     * @see org.openmrs.module.testing.TestingService#generateModuleZipFile()
+     */
+	public byte[] generateModuleZipFile() throws IOException {
+		File moduleRepository = OpenmrsUtil.getDirectoryInApplicationDataDirectory(ModuleConstants.REPOSITORY_FOLDER_PROPERTY_DEFAULT);
+		return TestingUtil.zipDirectory(moduleRepository);
 	}
 }

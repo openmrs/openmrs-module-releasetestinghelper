@@ -13,10 +13,13 @@
  */
 package org.openmrs.module.testing.api;
 
+import java.io.IOException;
 import java.io.OutputStream;
 
 import org.openmrs.Patient;
+import org.openmrs.annotation.Authorized;
 import org.openmrs.api.APIException;
+import org.openmrs.util.OpenmrsConstants;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -56,4 +59,13 @@ public interface TestingService {
 	 */
 	@Transactional(readOnly = true)
 	public Patient getPatientWithMostObs();
+	
+	/**
+	 * Creates a zip file with modules.
+	 * 
+	 * @return an array of bytes for the zip contents.
+	 */
+	@Transactional(readOnly = true)
+	@Authorized(OpenmrsConstants.PRIV_MANAGE_MODULES)
+	public byte[] generateModuleZipFile() throws IOException;
 }
