@@ -30,8 +30,10 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.hibernate.SessionFactory;
+import org.openmrs.api.db.DAOException;
 import org.openmrs.module.testing.api.db.TestingDao;
 import org.openmrs.util.OpenmrsConstants;
 
@@ -51,37 +53,38 @@ public class HibernateTestingDao implements TestingDao {
 		this.sessionFactory = sessionFactory;
 	}
 	
-	public void generateTestDataSet(OutputStream os) throws IOException {
-		ZipOutputStream zip = new ZipOutputStream(os);
-		zip.putNextEntry(new ZipEntry("data.txt"));
-		
-		OutputStreamWriter osWriter = new OutputStreamWriter(zip, "UTF-8");
-		PrintWriter out = new PrintWriter(osWriter);
-		
-		// Write the DDL Header as mysqldump does
-		out.println("-- ------------------------------------------------------");
-		out.println("-- Database dump with test data");
-		out.println("-- OpenMRS Version: " + OpenmrsConstants.OPENMRS_VERSION);
-		out.println("-- ------------------------------------------------------");
-		out.println("");
-		out.println("/*!40101 SET CHARACTER_SET_CLIENT=utf8 */;");
-		out.println("/*!40101 SET NAMES utf8 */;");
-		out.println("/*!40103 SET TIME_ZONE='+00:00' */;");
-		out.println("/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;");
-		out.println("/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;");
-		out.println("/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;");
-		out.println("/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;");
-		out.println("/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;");
-		out.println("/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;");
-		out.println("/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;");
-		out.println("/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;");
-		out.println("");
-		
-		List<String> tablesToDump = new ArrayList<String>();
-		//TODO: export all metadata and representative data
-		tablesToDump.add("location");
-		
+	public void generateTestDataSet(OutputStream os) throws DAOException {
+		ZipOutputStream zip = null;
 		try {
+			zip = new ZipOutputStream(os);
+			zip.putNextEntry(new ZipEntry("data.txt"));
+			
+			OutputStreamWriter osWriter = new OutputStreamWriter(zip, "UTF-8");
+			PrintWriter out = new PrintWriter(osWriter);
+			
+			// Write the DDL Header as mysqldump does
+			out.println("-- ------------------------------------------------------");
+			out.println("-- Database dump with test data");
+			out.println("-- OpenMRS Version: " + OpenmrsConstants.OPENMRS_VERSION);
+			out.println("-- ------------------------------------------------------");
+			out.println("");
+			out.println("/*!40101 SET CHARACTER_SET_CLIENT=utf8 */;");
+			out.println("/*!40101 SET NAMES utf8 */;");
+			out.println("/*!40103 SET TIME_ZONE='+00:00' */;");
+			out.println("/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;");
+			out.println("/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;");
+			out.println("/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;");
+			out.println("/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;");
+			out.println("/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;");
+			out.println("/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;");
+			out.println("/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;");
+			out.println("/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;");
+			out.println("");
+			
+			List<String> tablesToDump = new ArrayList<String>();
+			//TODO: export all metadata and representative data
+			tablesToDump.add("location");
+			
 			@SuppressWarnings("deprecation")
 			Connection conn = sessionFactory.getCurrentSession().connection();
 			try {
@@ -213,7 +216,9 @@ public class HibernateTestingDao implements TestingDao {
 				}
 			}
 			finally {
-				conn.close();
+				if (conn != null) {
+					conn.close();
+				}
 			}
 			
 			// Write the footer of the DDL script
@@ -225,16 +230,20 @@ public class HibernateTestingDao implements TestingDao {
 			out.println("/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;");
 			out.println("/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;");
 			out.println("/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;");
-			
 			out.flush();
-			out.close();
+			
+			zip.closeEntry();
+			zip.close();
+		}
+		catch (IOException e) {
+			throw new DAOException(e);
 		}
 		catch (SQLException e) {
-			throw new IOException(e);
+			throw new DAOException(e);
 		}
-		
-		zip.closeEntry();
-		zip.close();
+		finally {
+			IOUtils.closeQuietly(zip);
+		}
 	}
 	
 	/**

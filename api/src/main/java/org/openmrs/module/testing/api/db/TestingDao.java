@@ -13,9 +13,9 @@
  */
 package org.openmrs.module.testing.api.db;
 
-import java.io.IOException;
 import java.io.OutputStream;
 
+import org.openmrs.api.db.DAOException;
 import org.openmrs.module.testing.api.TestingService;
 
 /**
@@ -26,7 +26,7 @@ public interface TestingDao {
 	/**
 	 * @see TestingService#generateTestDataSet(OutputStream)
 	 */
-	void generateTestDataSet(OutputStream out) throws IOException;
+	void generateTestDataSet(OutputStream out) throws DAOException;
 	
 	/**
      * @see TestingService#getPatientWithMostEncounters()

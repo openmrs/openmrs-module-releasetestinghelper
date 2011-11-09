@@ -41,18 +41,13 @@ public class TestingServiceImpl implements TestingService {
 	}
 	
 	public void generateTestDataSet(OutputStream out) throws APIException {
-		try {
-	        dao.generateTestDataSet(out);
-        }
-        catch (IOException e) {
-	        throw new APIException(e);
-        }
+		dao.generateTestDataSet(out);
 	}
 	
 	/**
-     * @see org.openmrs.module.testing.TestingService#getPatientWithMostEncounters()
-     */
-	public Patient getPatientWithMostEncounters(){
+	 * @see org.openmrs.module.testing.TestingService#getPatientWithMostEncounters()
+	 */
+	public Patient getPatientWithMostEncounters() {
 		Integer patientId = dao.getPatientWithMostEncounters();
 		if (patientId != null) {
 			return Context.getPatientService().getPatient(patientId);
@@ -62,8 +57,8 @@ public class TestingServiceImpl implements TestingService {
 	}
 	
 	/**
-     * @see org.openmrs.module.testing.TestingService#getPatientWithMostObs()
-     */
+	 * @see org.openmrs.module.testing.TestingService#getPatientWithMostObs()
+	 */
 	public Patient getPatientWithMostObs() {
 		Integer patientId = dao.getPatientWithMostEncounters();
 		if (patientId != null) {
@@ -74,10 +69,11 @@ public class TestingServiceImpl implements TestingService {
 	}
 	
 	/**
-     * @see org.openmrs.module.testing.TestingService#generateModuleZipFile()
-     */
+	 * @see org.openmrs.module.testing.TestingService#generateModuleZipFile()
+	 */
 	public byte[] generateModuleZipFile() throws IOException {
-		File moduleRepository = OpenmrsUtil.getDirectoryInApplicationDataDirectory(ModuleConstants.REPOSITORY_FOLDER_PROPERTY_DEFAULT);
+		File moduleRepository = OpenmrsUtil
+		        .getDirectoryInApplicationDataDirectory(ModuleConstants.REPOSITORY_FOLDER_PROPERTY_DEFAULT);
 		return TestingUtil.zipDirectory(moduleRepository);
 	}
 }
