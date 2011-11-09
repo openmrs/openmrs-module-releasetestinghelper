@@ -25,8 +25,6 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -81,9 +79,12 @@ public class HibernateTestingDao implements TestingDao {
 			out.println("/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;");
 			out.println("");
 			
-			List<String> tablesToDump = new ArrayList<String>();
-			//TODO: export all metadata and representative data
-			tablesToDump.add("location");
+			String[] tablesToDump = new String[] { "concept", "concept_answer", "concept_class", "concept_complex",
+			        "concept_datatype", "concept_description", "concept_map", "concept_name", "concept_name_tag",
+			        "concept_name_tag_map", "concept_numeric", "concept_proposal", "concept_proposal_tag_map",
+			        "concept_set", "concept_set_derived", "concept_source", "concept_state_conversion", "concept_word",
+			        "drug", "drug_ingredient", "drug_order", "privilege", "role", "role_privilege", "role_role",
+			        "user_property", "user_role", "users" };
 			
 			@SuppressWarnings("deprecation")
 			Connection conn = sessionFactory.getCurrentSession().connection();
