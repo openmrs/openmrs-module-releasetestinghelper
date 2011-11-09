@@ -1,7 +1,5 @@
 package org.openmrs.module.testing.web.controller;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -54,20 +52,14 @@ public class TestingController {
 	 * 
 	 * @param response
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "/module/testing/zipModules")
+	@RequestMapping(method = RequestMethod.GET, value = "/module/testing/getModules")
 	public void getModules(HttpServletResponse response) {
 		if (log.isDebugEnabled())
-			log.debug("Getting installed modules...");
-		
-		//TODO Get the zipFile from the service layer
-		//See https://tickets.openmrs.org/browse/TRUNK-2828
-		File file = null;
-		//File file = Context.getService(TestingService.class).generateModuleZipFile();
-		
-		response.setContentType("application/zip");
-		response.setHeader("Content-Disposition", "attachment; filename=" + file.getName());
+			log.debug("Getting started modules...");
 		try {
-			FileCopyUtils.copy(new FileInputStream(file), response.getOutputStream());
+			byte[] moduleZip = Context.getService(TestingService.class).generateModuleZipFile();
+			ResponseUtil.prepareZipResponse(response, "modules.zip");
+			FileCopyUtils.copy(moduleZip, response.getOutputStream());
 			response.flushBuffer();
 			return;
 		}
