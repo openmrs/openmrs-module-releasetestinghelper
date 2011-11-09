@@ -63,7 +63,7 @@ public class TestingController {
 			log.debug("Getting started modules...");
 		try {
 			byte[] moduleZip = Context.getService(TestingService.class).generateModuleZipFile();
-			ResponseUtil.prepareZipResponse(response, "modules.zip");
+			ResponseUtil.prepareZipResponse(response, "modules");
 			FileCopyUtils.copy(moduleZip, response.getOutputStream());
 			response.flushBuffer();
 			return;
