@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.commons.io.IOUtils;
 import org.openmrs.module.Module;
 import org.openmrs.module.ModuleFactory;
 
@@ -38,31 +39,36 @@ public class TestingUtil {
 		
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		ZipOutputStream zos = new ZipOutputStream(baos);
+		FileInputStream fis = null;
 	
-		// Create a buffer for copying
-		byte[] buffer = new byte[8192];
-		
-		Collection<Module> startedModules = ModuleFactory.getStartedModules();
-		for (Module module : startedModules) {
-
-			File file = module.getFile();
+		try{
+			Collection<Module> startedModules = ModuleFactory.getStartedModules();
+			for (Module module : startedModules) {
+	
+				File file = module.getFile();
+					
+				// Stream to read file
+				fis = new FileInputStream(file);
 				
-			// Stream to read file
-			FileInputStream fis = new FileInputStream(file);
-			
-			// Make a ZipEntry
-			ZipEntry entry = new ZipEntry(file.getName());
-			zos.putNextEntry(entry);
-			
-			int bytesRead = 0;
-			while (-1 != (bytesRead = fis.read(buffer))) {
-				zos.write(buffer, 0, bytesRead);
+				// Make a ZipEntry
+				ZipEntry entry = new ZipEntry(file.getName());
+				zos.putNextEntry(entry);
+				
+				IOUtils.copy(fis, zos);
+				
+				fis.close();
+				fis = null; //do not let finally block close us since we closed properly.
+			}
+		}
+		finally{
+			if (fis != null) {
+				fis.close();
 			}
 			
-			fis.close();
+			if (zos != null) {
+				zos.close();
+			}
 		}
-		
-		zos.close();
 		
 		return baos.toByteArray();
 	}
