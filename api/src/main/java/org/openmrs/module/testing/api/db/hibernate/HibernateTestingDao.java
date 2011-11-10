@@ -25,11 +25,15 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
+import org.hibernate.Query;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.openmrs.api.db.DAOException;
 import org.openmrs.module.testing.api.db.TestingDao;
@@ -79,12 +83,21 @@ public class HibernateTestingDao implements TestingDao {
 			out.println("/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;");
 			out.println("");
 			
-			String[] tablesToDump = new String[] { "concept", "concept_answer", "concept_class", "concept_complex",
-			        "concept_datatype", "concept_description", "concept_map", "concept_name", "concept_name_tag",
-			        "concept_name_tag_map", "concept_numeric", "concept_proposal", "concept_proposal_tag_map",
-			        "concept_set", "concept_set_derived", "concept_source", "concept_state_conversion", "concept_word",
-			        "drug", "drug_ingredient", "drug_order", "privilege", "role", "role_privilege", "role_role",
-			        "user_property", "user_role", "users" };
+			List<String> tablesToDump = new ArrayList<String>();
+			Session session = sessionFactory.getCurrentSession();
+			String schema = (String) session.createSQLQuery("select schema()").uniqueResult();
+			log.warn("schema: " + schema);
+			// Get all tables that we'll need to dump
+			{
+				Query query = session
+				        .createSQLQuery("SELECT tabs.table_name FROM INFORMATION_SCHEMA.TABLES tabs WHERE tabs.table_schema = '"
+				                + schema + "'");
+				for (Object tn : query.list()) {
+					String tableName = (String) tn;
+					tablesToDump.add(tableName);
+				}
+			}
+			log.warn("tables to dump: " + tablesToDump);
 			
 			@SuppressWarnings("deprecation")
 			Connection conn = sessionFactory.getCurrentSession().connection();
