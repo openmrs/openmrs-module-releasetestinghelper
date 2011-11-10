@@ -13,7 +13,6 @@
  */
 package org.openmrs.module.testing.api;
 
-import java.io.IOException;
 import java.io.OutputStream;
 
 import org.openmrs.Patient;
