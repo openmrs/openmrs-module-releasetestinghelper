@@ -17,14 +17,24 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.openmrs.module.Module;
+import org.openmrs.module.ModuleException;
+import org.openmrs.module.ModuleFactory;
+import org.openmrs.module.ModuleFileParser;
 
 /**
  * Utility methods for the testing module.
  */
 public class TestingUtil {
 
+	private static Log log = LogFactory.getLog(TestingUtil.class);
+	
 	/**
 	 * Zips a directory.
 	 * 
@@ -53,6 +63,11 @@ public class TestingUtil {
 			//Ignore non module files.
 			if (!file.getAbsolutePath().endsWith(".omod"))
 				continue;
+			
+			//Ignore modules which are not started.
+			if (!isModuleRunning(file)) {
+				continue;
+			}
 				
 			// Stream to read file
 			FileInputStream in = new FileInputStream(file);
@@ -71,5 +86,29 @@ public class TestingUtil {
 		zos.close();
 		
 		return baos.toByteArray();
+	}
+	
+	/**
+	 * Checks if a module is running.
+	 * 
+	 * @param moduleFile the module file.
+	 * @return true if running, else false.
+	 */
+	private static boolean isModuleRunning(File moduleFile) {
+		try {
+			Module module = new ModuleFileParser(moduleFile).parse();
+			Collection<Module> startedModules = ModuleFactory.getStartedModules();
+			for (Module mod : startedModules) {
+				//Module.equals() checks for only the module id.
+				if (mod.equals(module) && mod.getVersion().equals(module.getVersion())) {
+					return true;
+				}
+			}
+		}
+		catch (ModuleException e) {
+			log.error("Error getting module object from file", e);
+		}
+		
+		return false;
 	}
 }
