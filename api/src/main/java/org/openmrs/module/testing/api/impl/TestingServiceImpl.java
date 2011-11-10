@@ -68,7 +68,12 @@ public class TestingServiceImpl implements TestingService {
 	/**
 	 * @see org.openmrs.module.testing.TestingService#generateModuleZipFile()
 	 */
-	public byte[] generateModuleZipFile() throws IOException {
-		return TestingUtil.zipStartedModules();
+	public byte[] generateModuleZipFile() throws APIException {
+		try{
+			return TestingUtil.zipStartedModules();
+		}
+		catch(IOException ex){
+			throw new APIException(ex.getMessage(), ex);
+		}
 	}
 }

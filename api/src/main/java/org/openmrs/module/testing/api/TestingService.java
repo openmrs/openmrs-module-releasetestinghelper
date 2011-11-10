@@ -67,5 +67,5 @@ public interface TestingService {
 	 */
 	@Transactional(readOnly = true)
 	@Authorized(OpenmrsConstants.PRIV_MANAGE_MODULES)
-	public byte[] generateModuleZipFile() throws IOException;
+	public byte[] generateModuleZipFile() throws APIException;
 }
