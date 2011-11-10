@@ -73,7 +73,7 @@ public class TestingServiceImpl implements TestingService {
 			return TestingUtil.zipStartedModules();
 		}
 		catch(IOException ex){
-			throw new APIException(ex.getMessage(), ex);
+			throw new APIException(ex);
 		}
 	}
 }

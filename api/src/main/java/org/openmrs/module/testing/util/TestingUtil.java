@@ -57,17 +57,11 @@ public class TestingUtil {
 				IOUtils.copy(fis, zos);
 				
 				fis.close();
-				fis = null; //do not let finally block close us since we closed properly.
 			}
 		}
 		finally{
-			if (fis != null) {
-				fis.close();
-			}
-			
-			if (zos != null) {
-				zos.close();
-			}
+			IOUtils.closeQuietly(fis);
+			IOUtils.closeQuietly(zos);
 		}
 		
 		return baos.toByteArray();
