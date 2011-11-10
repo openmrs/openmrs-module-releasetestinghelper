@@ -19,7 +19,6 @@ import java.io.OutputStream;
 import org.openmrs.Patient;
 import org.openmrs.api.APIException;
 import org.openmrs.api.context.Context;
-import org.openmrs.module.ModuleUtil;
 import org.openmrs.module.testing.api.TestingService;
 import org.openmrs.module.testing.api.db.TestingDao;
 import org.openmrs.module.testing.util.TestingUtil;
@@ -70,6 +69,6 @@ public class TestingServiceImpl implements TestingService {
 	 * @see org.openmrs.module.testing.TestingService#generateModuleZipFile()
 	 */
 	public byte[] generateModuleZipFile() throws IOException {
-		return TestingUtil.zipDirectory(ModuleUtil.getModuleRepository());
+		return TestingUtil.zipStartedModules();
 	}
 }

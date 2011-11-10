@@ -21,94 +21,49 @@ import java.util.Collection;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.openmrs.module.Module;
-import org.openmrs.module.ModuleException;
 import org.openmrs.module.ModuleFactory;
-import org.openmrs.module.ModuleFileParser;
 
 /**
  * Utility methods for the testing module.
  */
 public class TestingUtil {
-
-	private static Log log = LogFactory.getLog(TestingUtil.class);
 	
 	/**
-	 * Zips a directory.
+	 * Zips all started modules.
 	 * 
-	 * @param directory the directory to zip.
 	 * @return an array of bytes for the zip contents.
 	 */
-	public static byte[] zipDirectory(File directory) throws IOException {
+	public static byte[] zipStartedModules() throws IOException {
 		
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		ZipOutputStream zos = new ZipOutputStream(baos);
-		
+	
 		// Create a buffer for copying
 		byte[] buffer = new byte[8192];
 		
-		File[] files = directory.listFiles();
-		int bytesRead = 0;
-		for (int i = 0; i < files.length; i++) {
-			
-			File file = files[i];
-			
-			//Ignore directories
-			if (file.isDirectory()) {
-				continue;
-			} 
-			
-			//Ignore non module files.
-			if (!file.getAbsolutePath().endsWith(".omod"))
-				continue;
-			
-			//Ignore modules which are not started.
-			if (!isModuleRunning(file)) {
-				continue;
-			}
+		Collection<Module> startedModules = ModuleFactory.getStartedModules();
+		for (Module module : startedModules) {
+
+			File file = module.getFile();
 				
 			// Stream to read file
-			FileInputStream in = new FileInputStream(file);
+			FileInputStream fis = new FileInputStream(file);
 			
 			// Make a ZipEntry
-			ZipEntry entry = new ZipEntry(file.getPath().substring(directory.getPath().length() + 1));
+			ZipEntry entry = new ZipEntry(file.getName());
 			zos.putNextEntry(entry);
 			
-			while (-1 != (bytesRead = in.read(buffer))) {
+			int bytesRead = 0;
+			while (-1 != (bytesRead = fis.read(buffer))) {
 				zos.write(buffer, 0, bytesRead);
 			}
 			
-			in.close();
+			fis.close();
 		}
 		
 		zos.close();
 		
 		return baos.toByteArray();
-	}
-	
-	/**
-	 * Checks if a module is running.
-	 * 
-	 * @param moduleFile the module file.
-	 * @return true if running, else false.
-	 */
-	private static boolean isModuleRunning(File moduleFile) {
-		try {
-			Module module = new ModuleFileParser(moduleFile).parse();
-			Collection<Module> startedModules = ModuleFactory.getStartedModules();
-			for (Module mod : startedModules) {
-				//Module.equals() checks for only the module id.
-				if (mod.equals(module) && mod.getVersion().equals(module.getVersion())) {
-					return true;
-				}
-			}
-		}
-		catch (ModuleException e) {
-			log.error("Error getting module object from file", e);
-		}
-		
-		return false;
 	}
 }
