@@ -15,19 +15,23 @@ package org.openmrs.module.testing.web.controller;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
 
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.xerces.impl.dv.util.Base64;
 import org.openmrs.api.APIException;
 import org.openmrs.api.context.Context;
+import org.openmrs.api.context.ContextAuthenticationException;
 import org.openmrs.module.testing.api.TestingService;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * The main controller.
@@ -49,19 +53,22 @@ public class TestingController {
 	 * @throws APIException
 	 * @throws IOException
 	 */
-	@RequestMapping(value = "/module/testing/generateTestDataSet", method = RequestMethod.GET)
-	public void generateTestDataSet(HttpServletResponse response) throws APIException, IOException {
-		ResponseUtil.prepareZipResponse(response, "testDataSet");
+	@RequestMapping(value = "/module/testing/generateTestDataSet", method = RequestMethod.POST)
+	public void generateTestDataSet(HttpServletResponse response, @RequestParam(value = "username") String username,
+	                                @RequestParam(value = "password") String password) throws APIException, IOException {
 		
-		OutputStream out = response.getOutputStream();
-		
-		try {
-			TestingService service = Context.getService(TestingService.class);
-			service.generateTestDataSet(out);
-			out.close();
-		}
-		finally {
-			IOUtils.closeQuietly(out);
+		if (authenticateAsSuperUser(username, password, response)) {
+			OutputStream out = null;
+			try {
+				ResponseUtil.prepareZipResponse(response, "testDataSet");
+				out = response.getOutputStream();
+				TestingService service = Context.getService(TestingService.class);
+				service.generateTestDataSet(out);
+				out.close();
+			}
+			finally {
+				IOUtils.closeQuietly(out);
+			}
 		}
 	}
 	
@@ -69,23 +76,57 @@ public class TestingController {
 	 * Processes the requests for installed modules and returns a zip file of all modules
 	 * 
 	 * @param response
+	 * @throws APIException
+	 * @throws IOException
 	 */
-	@RequestMapping(method = RequestMethod.GET, value = "/module/testing/getModules")
-	public void getModules(HttpServletResponse response) {
+	@RequestMapping(method = RequestMethod.POST, value = "/module/testing/getModules")
+	public void getModules(HttpServletResponse response, @RequestParam(value = "username") String username,
+	                       @RequestParam(value = "password") String password) throws APIException, IOException {
+		
 		if (log.isDebugEnabled())
 			log.debug("Getting started modules...");
-		try {
+		
+		if (authenticateAsSuperUser(username, password, response)) {
 			byte[] moduleZip = Context.getService(TestingService.class).generateModuleZipFile();
 			ResponseUtil.prepareZipResponse(response, "modules");
 			FileCopyUtils.copy(moduleZip, response.getOutputStream());
 			response.flushBuffer();
 			return;
 		}
-		catch (IOException e) {
-			//there is nothing to download
-			response.setContentType("text/html");
-			response.setHeader("Content-Disposition", "");
-			throw new APIException("Failed to write the zip file to the response outputStream:" + e.getMessage());
+	}
+	
+	/**
+	 * Processes authentication of a user as super user, if the authentication fails, it sends the
+	 * response back to the client along with the an unauthorized error code, so you can't write to
+	 * the response's outPutStream if the authentication fails.
+	 * 
+	 * @param username the Base64 encoded username
+	 * @param password the Base64 encoded password
+	 * @param response the httpResponse object to write to in case authentication fails.
+	 * @return true if authentication was successful otherwise false
+	 * @throws IOException
+	 */
+	public boolean authenticateAsSuperUser(String username, String password, HttpServletResponse response)
+	    throws IOException {
+		if (log.isDebugEnabled())
+			log.debug("Authenticating user...");
+		
+		try {
+			String decodedUsername = new String(Base64.decode(username), Charset.forName("UTF-8"));
+			String decodedPassword = new String(Base64.decode(password), Charset.forName("UTF-8"));
+			Context.authenticate(decodedUsername, decodedPassword);
+			if (Context.isAuthenticated() && Context.getAuthenticatedUser().isSuperUser()) {
+				if (log.isDebugEnabled())
+					log.debug("Authenticated successfully...");
+				return true;
+			}
 		}
+		catch (ContextAuthenticationException e) {
+			//do nothing
+			response.sendError(HttpServletResponse.SC_UNAUTHORIZED,
+			    "Unable to authenticate as a User with the System Developer role. Invalid username or password");
+		}
+		
+		return false;
 	}
 }
