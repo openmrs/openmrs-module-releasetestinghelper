@@ -26,11 +26,15 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.hibernate.Query;
 import org.hibernate.Session;
@@ -104,128 +108,51 @@ public class HibernateTestingDao implements TestingDao {
 			try {
 				Statement st = conn.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
 				
-				for (String tableName : tablesToDump) {
+				for (String table : tablesToDump) {
 					out.println();
 					out.println("--");
-					out.println("-- Table structure for table `" + tableName + "`");
+					out.println("-- Table structure for table `" + table + "`");
 					out.println("--");
-					out.println("DROP TABLE IF EXISTS `" + tableName + "`;");
+					out.println("DROP TABLE IF EXISTS `" + table + "`;");
 					out.println("SET @saved_cs_client     = @@character_set_client;");
 					out.println("SET character_set_client = utf8;");
-					ResultSet rs = st.executeQuery("SHOW CREATE TABLE " + tableName);
+					ResultSet rs = st.executeQuery("SHOW CREATE TABLE " + table);
 					while (rs.next()) {
 						out.println(rs.getString("Create Table") + ";");
 					}
 					out.println("SET character_set_client = @saved_cs_client;");
 					out.println();
-					
-					{
-						out.println("-- Dumping data for table `" + tableName + "`");
-						out.println("LOCK TABLES `" + tableName + "` WRITE;");
-						out.println("/*!40000 ALTER TABLE `" + tableName + "` DISABLE KEYS */;");
-						boolean first = true;
-						
-						rs = st.executeQuery("SELECT * FROM " + tableName);
-						ResultSetMetaData md = rs.getMetaData();
-						int numColumns = md.getColumnCount();
-						int rowNum = 0;
-						boolean insert = false;
-						
-						while (rs.next()) {
-							if (rowNum == 0) {
-								insert = true;
-								out.print("INSERT INTO `" + tableName + "` VALUES ");
-							}
-							++rowNum;
-							if (first) {
-								first = false;
-							} else {
-								out.print(", ");
-							}
-							if (rowNum % 20 == 0) {
-								out.println();
-							}
-							out.print("(");
-							for (int i = 1; i <= numColumns; ++i) {
-								if (i != 1) {
-									out.print(",");
-								}
-								if (rs.getObject(i) == null) {
-									out.print("NULL");
-								} else {
-									switch (md.getColumnType(i)) {
-										case Types.VARCHAR:
-										case Types.CHAR:
-										case Types.LONGVARCHAR:
-											out.print("'");
-											out.print(rs.getString(i).replaceAll("\n", "\\\\n").replaceAll("'", "\\\\'"));
-											out.print("'");
-											break;
-										case Types.BIGINT:
-										case Types.DECIMAL:
-										case Types.NUMERIC:
-											out.print(rs.getBigDecimal(i));
-											break;
-										case Types.BIT:
-											out.print(rs.getBoolean(i));
-											break;
-										case Types.INTEGER:
-										case Types.SMALLINT:
-										case Types.TINYINT:
-											out.print(rs.getInt(i));
-											break;
-										case Types.REAL:
-										case Types.FLOAT:
-										case Types.DOUBLE:
-											out.print(rs.getDouble(i));
-											break;
-										case Types.BLOB:
-										case Types.VARBINARY:
-										case Types.LONGVARBINARY:
-											Blob blob = rs.getBlob(i);
-											out.print("'");
-											InputStream in = blob.getBinaryStream();
-											while (true) {
-												int b = in.read();
-												if (b < 0) {
-													break;
-												}
-												char c = (char) b;
-												if (c == '\'') {
-													out.print("\'");
-												} else {
-													out.print(c);
-												}
-											}
-											out.print("'");
-											break;
-										case Types.CLOB:
-											out.print("'");
-											out.print(rs.getString(i).replaceAll("\n", "\\\\n").replaceAll("'", "\\\\'"));
-											out.print("'");
-											break;
-										case Types.DATE:
-											out.print("'" + rs.getDate(i) + "'");
-											break;
-										case Types.TIMESTAMP:
-											out.print("'" + rs.getTimestamp(i) + "'");
-											break;
-										default:
-											throw new RuntimeException("TODO: handle type code " + md.getColumnType(i)
-											        + " (name " + md.getColumnTypeName(i) + ")");
-									}
-								}
-							}
-							out.print(")");
-						}
-						if (insert) {
-							out.println(";");
-							insert = false;
-						}
-						
-						out.println("/*!40000 ALTER TABLE `" + tableName + "` ENABLE KEYS */;");
-						out.println("UNLOCK TABLES;");
-						out.println();
+				}
+				
+				Set<String> personIds = new HashSet<String>();
+				ResultSet rs = st.executeQuery("SELECT person_id FROM users");
+				while (rs.next()) {
+					int person_id = rs.getInt(1);
+					personIds.add(new Integer(person_id).toString());
+				}
+				String joinedPersonIds = StringUtils.join(personIds, ",");
+				
+				Set<String> personIdColumn = new HashSet<String>(Arrays.asList("person", "person_address",
+				    "person_attribute", "person_name", "obs"));
+				Set<String> patientIdColumn = new HashSet<String>(Arrays.asList("patient", "patient_identifier",
+				    "patient_program", "encounter", "orders"));
+				
+				for (String table : tablesToDump) {
+					if (personIdColumn.contains(table)) {
+						dumpDataFromTable(out, st, table, "person_id IN (" + joinedPersonIds + ")");
+					} else if (patientIdColumn.contains(table)) {
+						dumpDataFromTable(out, st, table, "patient_id IN (" + joinedPersonIds + ")");
+					} else if ("relationship".equals(table)) {
+						//TODO: recursion
+					} else if ("patient_state".equals(table)) {
+						dumpDataFromTable(out, st, table,
+						    "patient_program_id IN (SELECT patient_program_id FROM patient_program WHERE patient_id IN ("
+						            + joinedPersonIds + "))");
+					} else if ("drug_order".equals(table)) {
+						dumpDataFromTable(out, st, table, "order_id IN (SELECT order_id FROM orders WHERE patient_id IN ("
+						        + joinedPersonIds + "))");
+					} else {
+						dumpDataFromTable(out, st, table, null);
 					}
 				}
 			}
@@ -258,6 +185,127 @@ public class HibernateTestingDao implements TestingDao {
 		finally {
 			IOUtils.closeQuietly(zip);
 		}
+	}
+	
+	/**
+	 * Dumps data from the given table.
+	 */
+	private void dumpDataFromTable(PrintWriter out, Statement st, String table, String where) throws SQLException,
+	    IOException {
+		if (where == null) {
+			where = "";
+		} else {
+			where = " where " + where;
+		}
+		
+		out.println("-- Dumping data for table `" + table + "`");
+		out.println("LOCK TABLES `" + table + "` WRITE;");
+		out.println("/*!40000 ALTER TABLE `" + table + "` DISABLE KEYS */;");
+		boolean first = true;
+		
+		String query = "SELECT * FROM " + table + where;
+		
+		ResultSet rs = st.executeQuery(query);
+		ResultSetMetaData md = rs.getMetaData();
+		int numColumns = md.getColumnCount();
+		int rowNum = 0;
+		boolean insert = false;
+		
+		while (rs.next()) {
+			if (rowNum == 0) {
+				insert = true;
+				out.print("INSERT INTO `" + table + "` VALUES ");
+			}
+			++rowNum;
+			if (first) {
+				first = false;
+			} else {
+				out.print(", ");
+			}
+			if (rowNum % 20 == 0) {
+				out.println();
+			}
+			out.print("(");
+			for (int i = 1; i <= numColumns; ++i) {
+				if (i != 1) {
+					out.print(",");
+				}
+				if (rs.getObject(i) == null) {
+					out.print("NULL");
+				} else {
+					switch (md.getColumnType(i)) {
+						case Types.VARCHAR:
+						case Types.CHAR:
+						case Types.LONGVARCHAR:
+							out.print("'");
+							out.print(rs.getString(i).replaceAll("\n", "\\\\n").replaceAll("'", "\\\\'"));
+							out.print("'");
+							break;
+						case Types.BIGINT:
+						case Types.DECIMAL:
+						case Types.NUMERIC:
+							out.print(rs.getBigDecimal(i));
+							break;
+						case Types.BIT:
+							out.print(rs.getBoolean(i));
+							break;
+						case Types.INTEGER:
+						case Types.SMALLINT:
+						case Types.TINYINT:
+							out.print(rs.getInt(i));
+							break;
+						case Types.REAL:
+						case Types.FLOAT:
+						case Types.DOUBLE:
+							out.print(rs.getDouble(i));
+							break;
+						case Types.BLOB:
+						case Types.VARBINARY:
+						case Types.LONGVARBINARY:
+							Blob blob = rs.getBlob(i);
+							out.print("'");
+							InputStream in = blob.getBinaryStream();
+							while (true) {
+								int b = in.read();
+								if (b < 0) {
+									break;
+								}
+								char c = (char) b;
+								if (c == '\'') {
+									out.print("\'");
+								} else {
+									out.print(c);
+								}
+							}
+							out.print("'");
+							break;
+						case Types.CLOB:
+							out.print("'");
+							out.print(rs.getString(i).replaceAll("\n", "\\\\n").replaceAll("'", "\\\\'"));
+							out.print("'");
+							break;
+						case Types.DATE:
+							out.print("'" + rs.getDate(i) + "'");
+							break;
+						case Types.TIMESTAMP:
+							out.print("'" + rs.getTimestamp(i) + "'");
+							break;
+						default:
+							throw new RuntimeException("TODO: handle type code " + md.getColumnType(i) + " (name "
+							        + md.getColumnTypeName(i) + ")");
+					}
+				}
+			}
+			out.print(")");
+		}
+		if (insert) {
+			out.println(";");
+			insert = false;
+		}
+		
+		out.println("/*!40000 ALTER TABLE `" + table + "` ENABLE KEYS */;");
+		out.println("UNLOCK TABLES;");
+		out.println();
 	}
 	
 	/**
