@@ -16,6 +16,8 @@ package org.openmrs.module.testing.web.controller;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -27,11 +29,20 @@ import org.openmrs.api.APIException;
 import org.openmrs.api.context.Context;
 import org.openmrs.api.context.ContextAuthenticationException;
 import org.openmrs.module.testing.api.TestingService;
+import org.openmrs.web.WebConstants;
+import org.openmrs.module.testing.SettingsForm;
+import org.openmrs.module.testing.SettingsProperty;
+import org.openmrs.module.testing.TestingConstants;
+import org.openmrs.api.AdministrationService;
+import org.openmrs.GlobalProperty;
+import javax.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.validation.Errors;
+import org.springframework.web.bind.annotation.ModelAttribute;
 
 /**
  * The main controller.
@@ -128,5 +139,44 @@ public class TestingController {
 		}
 		
 		return false;
+	}
+	
+	@ModelAttribute("settingsForm")
+	public SettingsForm getSettingsForm() {
+		SettingsForm settingsForm = new SettingsForm();
+		
+		List<SettingsProperty> settings = new ArrayList<SettingsProperty>();
+		AdministrationService service = Context.getAdministrationService();
+		
+		addSetting(TestingConstants.GP_KEY_ALLOWED_IP_ADDRESSES, settings, service);
+		addSetting(TestingConstants.GP_KEY_RANDOMIZE_CRITERIA, settings, service);
+		addSetting(TestingConstants.GP_KEY_MAX_PATIENT_COUNT, settings, service);
+		addSetting(TestingConstants.GP_KEY_MAX_OBS_COUNT, settings, service);
+		
+		settingsForm.setSettings(settings);
+
+		return settingsForm;
+	}
+	
+	public void addSetting(String name, List<SettingsProperty> settings, AdministrationService service) {
+		GlobalProperty globalProperty = service.getGlobalPropertyObject(name);
+		if (globalProperty != null) {
+			settings.add(new SettingsProperty(globalProperty));
+		}
+	}
+	
+	@RequestMapping(value = "/module/testing/settings", method = RequestMethod.POST)
+	public void updateSettings(@ModelAttribute("settingsForm") SettingsForm settingsForm, Errors errors,
+	        HttpSession session) {
+				
+		if (errors.hasErrors()) {
+			session.setAttribute(WebConstants.OPENMRS_MSG_ATTR, "testing.settings.not.saved");
+		} else {
+			AdministrationService service = Context.getAdministrationService();
+			for (SettingsProperty property : settingsForm.getSettings()) {
+				service.saveGlobalProperty(property.getGlobalProperty());
+			}
+			session.setAttribute(WebConstants.OPENMRS_MSG_ATTR, "testing.settings.saved");
+		}
 	}
 }

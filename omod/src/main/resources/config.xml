@@ -27,7 +27,31 @@
 	  <point>org.openmrs.admin.list</point>
 	  <class>org.openmrs.module.testing.extension.html.AdminList</class>
 	 </extension>    
+  	  
   	  	
+  	 <!-- Required Global Properties -->
+	<globalProperty>
+		<property>testing.allowedIPAddresses</property>
+		<defaultValue></defaultValue>
+		<description>IP addresses that can make rest calls to the test module</description>
+	</globalProperty>
+	<globalProperty>
+		<property>testing.randomizeCriteria</property>
+		<defaultValue></defaultValue>
+		<description>The criteria to use to randomize the generated data</description>
+	</globalProperty>
+	<globalProperty>
+		<property>testing.maxPatientCount</property>
+		<defaultValue></defaultValue>
+		<description>The maximum number of patients to add to the test dataset</description>
+	</globalProperty>
+	<globalProperty>
+		<property>testing.maxObsCount</property>
+		<defaultValue></defaultValue>
+		<description>The maximum number of observations to add to the test dataset</description>
+	</globalProperty>
+	
+	
   	<!-- Maps hibernate file's , if present -->   	
    	<mappingFiles>
 		${omodHbmConfig}
