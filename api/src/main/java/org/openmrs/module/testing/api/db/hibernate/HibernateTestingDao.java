@@ -272,7 +272,7 @@ public class HibernateTestingDao implements TestingDao {
 								}
 								char c = (char) b;
 								if (c == '\'') {
-									out.print("\'");
+									out.print("\\'");
 								} else {
 									out.print(c);
 								}
