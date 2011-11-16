@@ -125,11 +125,43 @@ public class HibernateTestingDao implements TestingDao {
 				}
 				
 				Set<String> personIds = new HashSet<String>();
+				
+				Integer mostEncounters = getPatientWithMostEncounters();
+				if (mostEncounters != null) {
+					personIds.add(mostEncounters.toString());
+				}
+				Integer mostObs = getPatientWithMostObs();
+				if (mostObs != null) {
+					personIds.add(mostObs.toString());
+				}
+				
 				ResultSet rs = st.executeQuery("SELECT person_id FROM users");
 				while (rs.next()) {
-					int person_id = rs.getInt(1);
-					personIds.add(new Integer(person_id).toString());
+					Integer person_id = rs.getInt(1);
+					personIds.add(person_id.toString());
 				}
+				
+				Set<String> personIdsToQuery = new HashSet<String>(personIds);
+				while (!personIdsToQuery.isEmpty()) {
+					String joinedPersonIdsToQuery = StringUtils.join(personIdsToQuery, ",");
+					rs = st.executeQuery("SELECT person_a, person_b FROM relationship WHERE person_a IN ("
+					        + joinedPersonIdsToQuery + ") OR person_b IN (" + joinedPersonIdsToQuery + ")");
+					
+					personIdsToQuery.clear();
+					
+					while (rs.next()) {
+						Integer person_id = rs.getInt(1); //person_a
+						if (personIds.add(person_id.toString())) {
+							personIdsToQuery.add(person_id.toString());
+						}
+						
+						person_id = rs.getInt(2); //person_b
+						if (personIds.add(person_id.toString())) {
+							personIdsToQuery.add(person_id.toString());
+						}
+					}
+				}
+				
 				String joinedPersonIds = StringUtils.join(personIds, ",");
 				
 				Set<String> personIdColumn = new HashSet<String>(Arrays.asList("person", "person_address",
@@ -143,7 +175,7 @@ public class HibernateTestingDao implements TestingDao {
 					} else if (patientIdColumn.contains(table)) {
 						dumpDataFromTable(out, st, table, "patient_id IN (" + joinedPersonIds + ")");
 					} else if ("relationship".equals(table)) {
-						//TODO: recursion
+						dumpDataFromTable(out, st, table, "person_a IN (" + joinedPersonIds + ") OR person_b IN (" + joinedPersonIds + ")");
 					} else if ("patient_state".equals(table)) {
 						dumpDataFromTable(out, st, table,
 						    "patient_program_id IN (SELECT patient_program_id FROM patient_program WHERE patient_id IN ("
@@ -174,16 +206,12 @@ public class HibernateTestingDao implements TestingDao {
 			out.flush();
 			
 			zip.closeEntry();
-			zip.close();
 		}
 		catch (IOException e) {
 			throw new DAOException(e);
 		}
 		catch (SQLException e) {
 			throw new DAOException(e);
-		}
-		finally {
-			IOUtils.closeQuietly(zip);
 		}
 	}
 	
