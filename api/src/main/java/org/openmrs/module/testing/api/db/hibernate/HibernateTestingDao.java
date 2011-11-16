@@ -33,7 +33,6 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.hibernate.Query;
@@ -103,6 +102,17 @@ public class HibernateTestingDao implements TestingDao {
 			}
 			log.warn("tables to dump: " + tablesToDump);
 			
+			Set<String> personIds = new HashSet<String>();
+			
+			Integer mostEncounters = getPatientWithMostEncounters();
+			if (mostEncounters != null) {
+				personIds.add(mostEncounters.toString());
+			}
+			Integer mostObs = getPatientWithMostObs();
+			if (mostObs != null) {
+				personIds.add(mostObs.toString());
+			}
+			
 			@SuppressWarnings("deprecation")
 			Connection conn = sessionFactory.getCurrentSession().connection();
 			try {
@@ -122,17 +132,6 @@ public class HibernateTestingDao implements TestingDao {
 					}
 					out.println("SET character_set_client = @saved_cs_client;");
 					out.println();
-				}
-				
-				Set<String> personIds = new HashSet<String>();
-				
-				Integer mostEncounters = getPatientWithMostEncounters();
-				if (mostEncounters != null) {
-					personIds.add(mostEncounters.toString());
-				}
-				Integer mostObs = getPatientWithMostObs();
-				if (mostObs != null) {
-					personIds.add(mostObs.toString());
 				}
 				
 				ResultSet rs = st.executeQuery("SELECT person_id FROM users");
@@ -175,7 +174,8 @@ public class HibernateTestingDao implements TestingDao {
 					} else if (patientIdColumn.contains(table)) {
 						dumpDataFromTable(out, st, table, "patient_id IN (" + joinedPersonIds + ")");
 					} else if ("relationship".equals(table)) {
-						dumpDataFromTable(out, st, table, "person_a IN (" + joinedPersonIds + ") OR person_b IN (" + joinedPersonIds + ")");
+						dumpDataFromTable(out, st, table, "person_a IN (" + joinedPersonIds + ") OR person_b IN ("
+						        + joinedPersonIds + ")");
 					} else if ("patient_state".equals(table)) {
 						dumpDataFromTable(out, st, table,
 						    "patient_program_id IN (SELECT patient_program_id FROM patient_program WHERE patient_id IN ("
