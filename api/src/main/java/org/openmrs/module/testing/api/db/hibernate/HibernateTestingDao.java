@@ -27,6 +27,7 @@ import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -35,10 +36,13 @@ import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.hibernate.Hibernate;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.openmrs.api.context.Context;
 import org.openmrs.api.db.DAOException;
+import org.openmrs.module.testing.TestingConstants;
 import org.openmrs.module.testing.api.db.TestingDao;
 import org.openmrs.util.OpenmrsConstants;
 
@@ -108,10 +112,19 @@ public class HibernateTestingDao implements TestingDao {
 			if (mostEncounters != null) {
 				personIds.add(mostEncounters.toString());
 			}
+			
 			Integer mostObs = getPatientWithMostObs();
 			if (mostObs != null) {
 				personIds.add(mostObs.toString());
 			}
+			
+			String maxPatientCount = Context.getAdministrationService().getGlobalProperty(TestingConstants.GP_KEY_MAX_PATIENT_COUNT, "0");
+			
+			List<Integer> randomPersonIds = getRandomPatients(Integer.valueOf(maxPatientCount) - 2);
+			for (Integer personId : randomPersonIds) {
+	            personIds.add(personId.toString());
+            }
+			
 			
 			@SuppressWarnings("deprecation")
 			Connection conn = sessionFactory.getCurrentSession().connection();
@@ -334,6 +347,18 @@ public class HibernateTestingDao implements TestingDao {
 		out.println("/*!40000 ALTER TABLE `" + table + "` ENABLE KEYS */;");
 		out.println("UNLOCK TABLES;");
 		out.println();
+	}
+	
+	/**
+	 * @see TestingDAO#getRandomPatients()
+	 */
+	@SuppressWarnings("unchecked")
+    public List<Integer> getRandomPatients(Integer limit) {
+		if (limit <= 0) {
+			return Collections.emptyList();
+		}
+		String sql = "SELECT patient_id FROM patient ORDER BY RAND() LIMIT " + limit;
+		return (List<Integer>) sessionFactory.getCurrentSession().createSQLQuery(sql).addScalar("patient_id", Hibernate.INTEGER).list();
 	}
 	
 	/**

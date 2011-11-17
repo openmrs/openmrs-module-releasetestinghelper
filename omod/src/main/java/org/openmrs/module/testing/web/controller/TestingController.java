@@ -67,7 +67,6 @@ public class TestingController {
 	@RequestMapping(value = "/module/testing/generateTestDataSet", method = RequestMethod.POST)
 	public void generateTestDataSet(HttpServletResponse response, @RequestParam(value = "username") String username,
 	                                @RequestParam(value = "password") String password) throws APIException, IOException {
-		
 		if (authenticateAsSuperUser(username, password, response)) {
 			OutputStream out = null;
 			try {
@@ -148,13 +147,10 @@ public class TestingController {
 		List<SettingsProperty> settings = new ArrayList<SettingsProperty>();
 		AdministrationService service = Context.getAdministrationService();
 		
-		addSetting(TestingConstants.GP_KEY_ALLOWED_IP_ADDRESSES, settings, service);
-		addSetting(TestingConstants.GP_KEY_RANDOMIZE_CRITERIA, settings, service);
 		addSetting(TestingConstants.GP_KEY_MAX_PATIENT_COUNT, settings, service);
-		addSetting(TestingConstants.GP_KEY_MAX_OBS_COUNT, settings, service);
 		
 		settingsForm.setSettings(settings);
-
+		
 		return settingsForm;
 	}
 	
@@ -166,9 +162,8 @@ public class TestingController {
 	}
 	
 	@RequestMapping(value = "/module/testing/settings", method = RequestMethod.POST)
-	public void updateSettings(@ModelAttribute("settingsForm") SettingsForm settingsForm, Errors errors,
-	        HttpSession session) {
-				
+	public void updateSettings(@ModelAttribute("settingsForm") SettingsForm settingsForm, Errors errors, HttpSession session) {
+		
 		if (errors.hasErrors()) {
 			session.setAttribute(WebConstants.OPENMRS_MSG_ATTR, "testing.settings.not.saved");
 		} else {
