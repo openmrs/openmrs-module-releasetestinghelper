@@ -119,6 +119,9 @@ public class HibernateTestingDao implements TestingDao {
 			}
 			
 			String maxPatientCount = Context.getAdministrationService().getGlobalProperty(TestingConstants.GP_KEY_MAX_PATIENT_COUNT, "0");
+			if (StringUtils.isBlank(maxPatientCount)) {
+				maxPatientCount = "0";
+			}
 			
 			List<Integer> randomPersonIds = getRandomPatients(Integer.valueOf(maxPatientCount) - 2);
 			for (Integer personId : randomPersonIds) {
