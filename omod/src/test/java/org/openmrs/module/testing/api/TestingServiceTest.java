@@ -61,6 +61,6 @@ public class TestingServiceTest extends BaseModuleContextSensitiveTest {
 		Context.authenticate("admin", "test");
 		//expect SQLGrammarException.class since only mySql is supported for now
 		//but we got past the service layer
-		service.generateTestDataSet(null);
+		service.generateTestDataSet(System.out);
 	}
 }
