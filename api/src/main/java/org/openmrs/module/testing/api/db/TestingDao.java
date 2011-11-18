@@ -24,17 +24,17 @@ import org.openmrs.module.testing.api.TestingService;
 public interface TestingDao {
 	
 	/**
-	 * @see TestingService#generateTestDataSet(OutputStream)
+	 * @see TestingService#generateTestDataSet(OutputStream, String, String)
 	 */
-	void generateTestDataSet(OutputStream out) throws DAOException;
+	void generateTestDataSet(OutputStream out, String salt, String encryptionkey) throws DAOException;
 	
 	/**
-     * @see TestingService#getPatientWithMostEncounters()
-     */
+	 * @see TestingService#getPatientWithMostEncounters()
+	 */
 	public Integer getPatientWithMostEncounters();
 	
 	/**
-     * @see TestingService#getPatientWithMostObs()
-     */
+	 * @see TestingService#getPatientWithMostObs()
+	 */
 	public Integer getPatientWithMostObs();
 }

@@ -20,29 +20,29 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.xerces.impl.dv.util.Base64;
+import org.openmrs.GlobalProperty;
 import org.openmrs.api.APIException;
+import org.openmrs.api.AdministrationService;
 import org.openmrs.api.context.Context;
 import org.openmrs.api.context.ContextAuthenticationException;
-import org.openmrs.module.testing.api.TestingService;
-import org.openmrs.web.WebConstants;
 import org.openmrs.module.testing.SettingsForm;
 import org.openmrs.module.testing.SettingsProperty;
 import org.openmrs.module.testing.TestingConstants;
-import org.openmrs.api.AdministrationService;
-import org.openmrs.GlobalProperty;
-import javax.servlet.http.HttpSession;
+import org.openmrs.module.testing.api.TestingService;
+import org.openmrs.web.WebConstants;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.FileCopyUtils;
+import org.springframework.validation.Errors;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.validation.Errors;
-import org.springframework.web.bind.annotation.ModelAttribute;
 
 /**
  * The main controller.
@@ -65,16 +65,17 @@ public class TestingController {
 	 * @throws IOException
 	 */
 	@RequestMapping(value = "/module/testing/generateTestDataSet", method = RequestMethod.POST)
-	public void generateTestDataSet(HttpServletResponse response, @RequestParam(value = "username") String username,
-	                                @RequestParam(value = "password") String password) throws APIException, IOException {
+	public void generateTestDataSet(HttpServletResponse response, @RequestParam(value = "u") String username,
+	                                @RequestParam(value = "p") String password, @RequestParam(value = "s") String salt)
+	    throws APIException, IOException {
 		if (authenticateAsSuperUser(username, password, response)) {
 			OutputStream out = null;
 			try {
 				ResponseUtil.prepareZipResponse(response, "testDataSet");
 				out = response.getOutputStream();
 				TestingService service = Context.getService(TestingService.class);
-				service.generateTestDataSet(out);
-				out.close();
+				service.generateTestDataSet(out, salt, new String(Base64.decode(username), "UTF-8") + ":"
+				        + new String(Base64.decode(password), "UTF-8"));
 			}
 			finally {
 				IOUtils.closeQuietly(out);
@@ -90,8 +91,8 @@ public class TestingController {
 	 * @throws IOException
 	 */
 	@RequestMapping(method = RequestMethod.POST, value = "/module/testing/getModules")
-	public void getModules(HttpServletResponse response, @RequestParam(value = "username") String username,
-	                       @RequestParam(value = "password") String password) throws APIException, IOException {
+	public void getModules(HttpServletResponse response, @RequestParam(value = "u") String username,
+	                       @RequestParam(value = "p") String password) throws APIException, IOException {
 		
 		if (log.isDebugEnabled())
 			log.debug("Getting started modules...");

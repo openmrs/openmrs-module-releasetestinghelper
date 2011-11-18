@@ -37,8 +37,12 @@ public class TestingServiceImpl implements TestingService {
 		this.dao = dao;
 	}
 	
-	public void generateTestDataSet(OutputStream out) throws APIException {
-		dao.generateTestDataSet(out);
+	/**
+	 * @see org.openmrs.module.testing.api.TestingService#generateTestDataSet(java.io.OutputStream,
+	 *      java.lang.String, java.lang.String)
+	 */
+	public void generateTestDataSet(OutputStream out, String salt, String encryptionkey) throws APIException {
+		dao.generateTestDataSet(out, salt, encryptionkey);
 	}
 	
 	/**
@@ -69,10 +73,10 @@ public class TestingServiceImpl implements TestingService {
 	 * @see org.openmrs.module.testing.TestingService#generateModuleZipFile()
 	 */
 	public byte[] generateModuleZipFile() throws APIException {
-		try{
+		try {
 			return TestingUtil.zipStartedModules();
 		}
-		catch(IOException ex){
+		catch (IOException ex) {
 			throw new APIException(ex);
 		}
 	}
