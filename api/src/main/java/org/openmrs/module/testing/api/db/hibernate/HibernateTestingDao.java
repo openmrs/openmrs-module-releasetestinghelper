@@ -290,7 +290,7 @@ public class HibernateTestingDao implements TestingDao {
 						case Types.CHAR:
 						case Types.LONGVARCHAR:
 							sb.append("'");
-							sb.append(rs.getString(i).replaceAll("\n", "\\\\n").replaceAll("'", "\\\\'"));
+							sb.append(rs.getString(i).replaceAll("\n", "\\\\n").replaceAll("'", "''"));
 							sb.append("'");
 							break;
 						case Types.BIGINT:
@@ -324,7 +324,7 @@ public class HibernateTestingDao implements TestingDao {
 								}
 								char c = (char) b;
 								if (c == '\'') {
-									sb.append("\\'");
+									sb.append("''");
 								} else {
 									sb.append(c);
 								}
@@ -333,7 +333,7 @@ public class HibernateTestingDao implements TestingDao {
 							break;
 						case Types.CLOB:
 							sb.append("'");
-							sb.append(rs.getString(i).replaceAll("\n", "\\\\n").replaceAll("'", "\\\\'"));
+							sb.append(rs.getString(i).replaceAll("\n", "\\\\n").replaceAll("'", "''"));
 							sb.append("'");
 							break;
 						case Types.DATE:
