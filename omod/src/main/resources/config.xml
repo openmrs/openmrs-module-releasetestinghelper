@@ -42,7 +42,7 @@
 	</globalProperty>
 	<globalProperty>
 		<property>testing.maxPatientCount</property>
-		<defaultValue></defaultValue>
+		<defaultValue>100</defaultValue>
 		<description>The maximum number of patients to add to the test dataset</description>
 	</globalProperty>
 	<globalProperty>
