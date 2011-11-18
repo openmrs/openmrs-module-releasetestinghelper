@@ -39,13 +39,13 @@ public class TestingServiceImpl implements TestingService {
 	}
 	
 	/**
-	 * @see org.openmrs.module.testing.api.TestingService#generateTestDataSet(java.io.OutputStream,
-	 *      java.lang.String, java.lang.String)
+	 * @see org.openmrs.module.testing.api.TestingService#generateTestDataSet(OutputStream)
 	 */
-	public void generateTestDataSet(OutputStream out, String salt, String encryptionkey) throws APIException {
+	public void generateTestDataSet(OutputStream out) throws APIException {
 		if (!Context.isAuthenticated() || !Context.getAuthenticatedUser().isSuperUser())
 			throw new APIAuthenticationException("Only users with the System Developer role can generate test data");
-		dao.generateTestDataSet(out, salt, encryptionkey);
+		dao.generateTestDataSet(out);
+		
 	}
 	
 	/**

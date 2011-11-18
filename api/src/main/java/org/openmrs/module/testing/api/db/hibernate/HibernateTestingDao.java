@@ -13,11 +13,11 @@
  */
 package org.openmrs.module.testing.api.db.hibernate;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -44,7 +44,6 @@ import org.openmrs.api.context.Context;
 import org.openmrs.api.db.DAOException;
 import org.openmrs.module.testing.TestingConstants;
 import org.openmrs.module.testing.api.db.TestingDao;
-import org.openmrs.module.testing.util.Security;
 import org.openmrs.util.OpenmrsConstants;
 
 /**
@@ -56,8 +55,6 @@ public class HibernateTestingDao implements TestingDao {
 	
 	private SessionFactory sessionFactory;
 	
-	private static final String LINE_SEPARATOR = System.getProperty("line.separator");
-	
 	/**
 	 * @param sessionFactory the sessionFactory to set
 	 */
@@ -65,29 +62,33 @@ public class HibernateTestingDao implements TestingDao {
 		this.sessionFactory = sessionFactory;
 	}
 	
-	public void generateTestDataSet(OutputStream os, String salt, String encryptionkey) throws DAOException {
+	public void generateTestDataSet(OutputStream os) throws DAOException {
 		ZipOutputStream zip = null;
-		
 		try {
-			StringBuffer sb = new StringBuffer(65536);
+			zip = new ZipOutputStream(os);
+			zip.putNextEntry(new ZipEntry("data.txt"));
+			
+			OutputStreamWriter osWriter = new OutputStreamWriter(zip, "UTF-8");
+			PrintWriter out = new PrintWriter(osWriter);
+			
 			// Write the DDL Header as mysqldump does
-			sb.append("-- ------------------------------------------------------");
-			sb.append(LINE_SEPARATOR + "-- Database dump with test data");
-			sb.append(LINE_SEPARATOR + "-- OpenMRS Version: " + OpenmrsConstants.OPENMRS_VERSION);
-			sb.append(LINE_SEPARATOR + "-- ------------------------------------------------------");
-			sb.append(LINE_SEPARATOR);
-			sb.append(LINE_SEPARATOR + "/*!40101 SET CHARACTER_SET_CLIENT=utf8 */;");
-			sb.append(LINE_SEPARATOR + "/*!40101 SET NAMES utf8 */;");
-			sb.append(LINE_SEPARATOR + "/*!40103 SET TIME_ZONE='+00:00' */;");
-			sb.append(LINE_SEPARATOR + "/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;");
-			sb.append(LINE_SEPARATOR + "/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;");
-			sb.append(LINE_SEPARATOR + "/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;");
-			sb.append(LINE_SEPARATOR + "/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;");
-			sb.append(LINE_SEPARATOR + "/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;");
-			sb.append(LINE_SEPARATOR + "/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;");
-			sb.append(LINE_SEPARATOR + "/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;");
-			sb.append(LINE_SEPARATOR + "/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;");
-			sb.append(LINE_SEPARATOR);
+			out.println("-- ------------------------------------------------------");
+			out.println("-- Database dump with test data");
+			out.println("-- OpenMRS Version: " + OpenmrsConstants.OPENMRS_VERSION);
+			out.println("-- ------------------------------------------------------");
+			out.println("");
+			out.println("/*!40101 SET CHARACTER_SET_CLIENT=utf8 */;");
+			out.println("/*!40101 SET NAMES utf8 */;");
+			out.println("/*!40103 SET TIME_ZONE='+00:00' */;");
+			out.println("/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;");
+			out.println("/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;");
+			out.println("/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;");
+			out.println("/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;");
+			out.println("/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;");
+			out.println("/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;");
+			out.println("/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;");
+			out.println("/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;");
+			out.println("");
 			
 			List<String> tablesToDump = new ArrayList<String>();
 			Session session = sessionFactory.getCurrentSession();
@@ -117,16 +118,15 @@ public class HibernateTestingDao implements TestingDao {
 				personIds.add(mostObs.toString());
 			}
 			
-			String maxPatientCount = Context.getAdministrationService().getGlobalProperty(
-			    TestingConstants.GP_KEY_MAX_PATIENT_COUNT, "0");
+			String maxPatientCount = Context.getAdministrationService().getGlobalProperty(TestingConstants.GP_KEY_MAX_PATIENT_COUNT, "0");
 			if (StringUtils.isBlank(maxPatientCount)) {
 				maxPatientCount = "0";
 			}
 			
 			List<Integer> randomPersonIds = getRandomPatients(Integer.valueOf(maxPatientCount) - 2);
 			for (Integer personId : randomPersonIds) {
-				personIds.add(personId.toString());
-			}
+	            personIds.add(personId.toString());
+            }
 			
 			@SuppressWarnings("deprecation")
 			Connection conn = sessionFactory.getCurrentSession().connection();
@@ -134,19 +134,19 @@ public class HibernateTestingDao implements TestingDao {
 				Statement st = conn.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
 				
 				for (String table : tablesToDump) {
-					sb.append(LINE_SEPARATOR);
-					sb.append(LINE_SEPARATOR + "--");
-					sb.append(LINE_SEPARATOR + "-- Table structure for table `" + table + "`");
-					sb.append(LINE_SEPARATOR + "--");
-					sb.append(LINE_SEPARATOR + "DROP TABLE IF EXISTS `" + table + "`;");
-					sb.append(LINE_SEPARATOR + "SET @saved_cs_client     = @@character_set_client;");
-					sb.append(LINE_SEPARATOR + "SET character_set_client = utf8;");
+					out.println();
+					out.println("--");
+					out.println("-- Table structure for table `" + table + "`");
+					out.println("--");
+					out.println("DROP TABLE IF EXISTS `" + table + "`;");
+					out.println("SET @saved_cs_client     = @@character_set_client;");
+					out.println("SET character_set_client = utf8;");
 					ResultSet rs = st.executeQuery("SHOW CREATE TABLE " + table);
 					while (rs.next()) {
-						sb.append(LINE_SEPARATOR + rs.getString("Create Table") + ";");
+						out.println(rs.getString("Create Table") + ";");
 					}
-					sb.append(LINE_SEPARATOR + "SET character_set_client = @saved_cs_client;");
-					sb.append(LINE_SEPARATOR);
+					out.println("SET character_set_client = @saved_cs_client;");
+					out.println();
 				}
 				
 				ResultSet rs = st.executeQuery("SELECT person_id FROM users");
@@ -185,21 +185,21 @@ public class HibernateTestingDao implements TestingDao {
 				
 				for (String table : tablesToDump) {
 					if (personIdColumn.contains(table)) {
-						dumpDataFromTable(sb, st, table, "person_id IN (" + joinedPersonIds + ")");
+						dumpDataFromTable(out, st, table, "person_id IN (" + joinedPersonIds + ")");
 					} else if (patientIdColumn.contains(table)) {
-						dumpDataFromTable(sb, st, table, "patient_id IN (" + joinedPersonIds + ")");
+						dumpDataFromTable(out, st, table, "patient_id IN (" + joinedPersonIds + ")");
 					} else if ("relationship".equals(table)) {
-						dumpDataFromTable(sb, st, table, "person_a IN (" + joinedPersonIds + ") OR person_b IN ("
+						dumpDataFromTable(out, st, table, "person_a IN (" + joinedPersonIds + ") OR person_b IN ("
 						        + joinedPersonIds + ")");
 					} else if ("patient_state".equals(table)) {
-						dumpDataFromTable(sb, st, table,
+						dumpDataFromTable(out, st, table,
 						    "patient_program_id IN (SELECT patient_program_id FROM patient_program WHERE patient_id IN ("
 						            + joinedPersonIds + "))");
 					} else if ("drug_order".equals(table)) {
-						dumpDataFromTable(sb, st, table, "order_id IN (SELECT order_id FROM orders WHERE patient_id IN ("
+						dumpDataFromTable(out, st, table, "order_id IN (SELECT order_id FROM orders WHERE patient_id IN ("
 						        + joinedPersonIds + "))");
 					} else {
-						dumpDataFromTable(sb, st, table, null);
+						dumpDataFromTable(out, st, table, null);
 					}
 				}
 			}
@@ -210,24 +210,15 @@ public class HibernateTestingDao implements TestingDao {
 			}
 			
 			// Write the footer of the DDL script
-			sb.append(LINE_SEPARATOR + "/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;");
-			sb.append(LINE_SEPARATOR + "/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;");
-			sb.append(LINE_SEPARATOR + "/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;");
-			sb.append(LINE_SEPARATOR + "/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;");
-			sb.append(LINE_SEPARATOR + "/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;");
-			sb.append(LINE_SEPARATOR + "/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;");
-			sb.append(LINE_SEPARATOR + "/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;");
-			sb.append(LINE_SEPARATOR + "/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;");
-			sb.append(LINE_SEPARATOR);
-			
-			String encrptyedText = Security.encryptString(sb.toString(), salt, encryptionkey);
-			
-			zip = new ZipOutputStream(os);
-			zip.putNextEntry(new ZipEntry("data.txt"));
-			OutputStreamWriter osWriter = new OutputStreamWriter(zip, "UTF-8");
-			BufferedWriter bw = new BufferedWriter(osWriter);
-			bw.write(encrptyedText);
-			bw.flush();
+			out.println("/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;");
+			out.println("/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;");
+			out.println("/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;");
+			out.println("/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;");
+			out.println("/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;");
+			out.println("/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;");
+			out.println("/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;");
+			out.println("/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;");
+			out.flush();
 			
 			zip.closeEntry();
 		}
@@ -242,7 +233,7 @@ public class HibernateTestingDao implements TestingDao {
 	/**
 	 * Dumps data from the given table.
 	 */
-	private void dumpDataFromTable(StringBuffer sb, Statement st, String table, String where) throws SQLException,
+	private void dumpDataFromTable(PrintWriter out, Statement st, String table, String where) throws SQLException,
 	    IOException {
 		if (where == null) {
 			where = "";
@@ -250,9 +241,9 @@ public class HibernateTestingDao implements TestingDao {
 			where = " where " + where;
 		}
 		
-		sb.append(LINE_SEPARATOR + "-- Dumping data for table `" + table + "`");
-		sb.append(LINE_SEPARATOR + "LOCK TABLES `" + table + "` WRITE;");
-		sb.append(LINE_SEPARATOR + "/*!40000 ALTER TABLE `" + table + "` DISABLE KEYS */;");
+		out.println("-- Dumping data for table `" + table + "`");
+		out.println("LOCK TABLES `" + table + "` WRITE;");
+		out.println("/*!40000 ALTER TABLE `" + table + "` DISABLE KEYS */;");
 		boolean first = true;
 		
 		String query = "SELECT * FROM " + table + where;
@@ -266,56 +257,56 @@ public class HibernateTestingDao implements TestingDao {
 		while (rs.next()) {
 			if (rowNum == 0) {
 				insert = true;
-				sb.append("INSERT INTO `" + table + "` VALUES ");
+				out.print("INSERT INTO `" + table + "` VALUES ");
 			}
 			++rowNum;
 			if (first) {
 				first = false;
 			} else {
-				sb.append(", ");
+				out.print(", ");
 			}
 			if (rowNum % 20 == 0) {
-				sb.append(LINE_SEPARATOR);
+				out.println();
 			}
-			sb.append("(");
+			out.print("(");
 			for (int i = 1; i <= numColumns; ++i) {
 				if (i != 1) {
-					sb.append(",");
+					out.print(",");
 				}
 				if (rs.getObject(i) == null) {
-					sb.append("NULL");
+					out.print("NULL");
 				} else {
 					switch (md.getColumnType(i)) {
 						case Types.VARCHAR:
 						case Types.CHAR:
 						case Types.LONGVARCHAR:
-							sb.append("'");
-							sb.append(rs.getString(i).replaceAll("\n", "\\\\n").replaceAll("'", "''"));
-							sb.append("'");
+							out.print("'");
+							out.print(rs.getString(i).replaceAll("\n", "\\\\n").replaceAll("'", "''"));
+							out.print("'");
 							break;
 						case Types.BIGINT:
 						case Types.DECIMAL:
 						case Types.NUMERIC:
-							sb.append(rs.getBigDecimal(i));
+							out.print(rs.getBigDecimal(i));
 							break;
 						case Types.BIT:
-							sb.append(rs.getBoolean(i));
+							out.print(rs.getBoolean(i));
 							break;
 						case Types.INTEGER:
 						case Types.SMALLINT:
 						case Types.TINYINT:
-							sb.append(rs.getInt(i));
+							out.print(rs.getInt(i));
 							break;
 						case Types.REAL:
 						case Types.FLOAT:
 						case Types.DOUBLE:
-							sb.append(rs.getDouble(i));
+							out.print(rs.getDouble(i));
 							break;
 						case Types.BLOB:
 						case Types.VARBINARY:
 						case Types.LONGVARBINARY:
 							Blob blob = rs.getBlob(i);
-							sb.append("'");
+							out.print("'");
 							InputStream in = blob.getBinaryStream();
 							while (true) {
 								int b = in.read();
@@ -324,23 +315,22 @@ public class HibernateTestingDao implements TestingDao {
 								}
 								char c = (char) b;
 								if (c == '\'') {
-									sb.append("''");
+									out.print("''");
 								} else {
-									sb.append(c);
+									out.print(c);
 								}
 							}
-							sb.append("'");
+							out.print("'");
 							break;
-						case Types.CLOB:
-							sb.append("'");
-							sb.append(rs.getString(i).replaceAll("\n", "\\\\n").replaceAll("'", "''"));
-							sb.append("'");
+						case Types.CLOB:out.print("'");
+							out.print(rs.getString(i).replaceAll("\n", "\\\\n").replaceAll("'", "''"));
+							out.print("'");
 							break;
 						case Types.DATE:
-							sb.append("'" + rs.getDate(i) + "'");
+							out.print("'" + rs.getDate(i) + "'");
 							break;
 						case Types.TIMESTAMP:
-							sb.append("'" + rs.getTimestamp(i) + "'");
+							out.print("'" + rs.getTimestamp(i) + "'");
 							break;
 						default:
 							throw new RuntimeException("TODO: handle type code " + md.getColumnType(i) + " (name "
@@ -348,29 +338,28 @@ public class HibernateTestingDao implements TestingDao {
 					}
 				}
 			}
-			sb.append(")");
+			out.print(")");
 		}
 		if (insert) {
-			sb.append(LINE_SEPARATOR + ";");
+			out.println(";");
 			insert = false;
 		}
 		
-		sb.append(LINE_SEPARATOR + "/*!40000 ALTER TABLE `" + table + "` ENABLE KEYS */;");
-		sb.append(LINE_SEPARATOR + "UNLOCK TABLES;");
-		sb.append(LINE_SEPARATOR);
+		out.println("/*!40000 ALTER TABLE `" + table + "` ENABLE KEYS */;");
+		out.println("UNLOCK TABLES;");
+		out.println();
 	}
 	
 	/**
 	 * @see TestingDAO#getRandomPatients()
 	 */
 	@SuppressWarnings("unchecked")
-	public List<Integer> getRandomPatients(Integer limit) {
+    public List<Integer> getRandomPatients(Integer limit) {
 		if (limit <= 0) {
 			return Collections.emptyList();
 		}
 		String sql = "SELECT patient_id FROM patient ORDER BY RAND() LIMIT " + limit;
-		return (List<Integer>) sessionFactory.getCurrentSession().createSQLQuery(sql)
-		        .addScalar("patient_id", Hibernate.INTEGER).list();
+		return (List<Integer>) sessionFactory.getCurrentSession().createSQLQuery(sql).addScalar("patient_id", Hibernate.INTEGER).list();
 	}
 	
 	/**

@@ -43,24 +43,24 @@ public class TestingServiceTest extends BaseModuleContextSensitiveTest {
 	}
 	
 	/**
-	 * @see {@link TestingService#generateTestDataSet(OutputStream,String,String)}
+	 * @see {@link TestingService#generateTestDataSet(OutputStream)}
 	 */
 	@Test(expected = APIAuthenticationException.class)
-	@Verifies(value = "should fail if the authenticated user is not a super user", method = "generateTestDataSet(OutputStream,String,String)")
+	@Verifies(value = "should fail if the authenticated user is not a super user", method = "generateTestDataSet(OutputStream)")
 	public void generateTestDataSet_shouldFailIfTheAuthenticatedUserIsNotASuperUser() throws Exception {
 		Context.getAuthenticatedUser().removeRole(new Role(OpenmrsConstants.SUPERUSER_ROLE));
-		service.generateTestDataSet(null, null, null);
+		service.generateTestDataSet(null);
 	}
 	
 	/**
-	 * @see {@link TestingService#generateTestDataSet(OutputStream,String,String)}
+	 * @see {@link TestingService#generateTestDataSet(OutputStream)}
 	 */
 	@Test(expected = SQLGrammarException.class)
-	@Verifies(value = "should pass if the authenticated user is a super user", method = "generateTestDataSet(OutputStream,String,String)")
+	@Verifies(value = "should pass if the authenticated user is a super user", method = "generateTestDataSet(OutputStream)")
 	public void generateTestDataSet_shouldPassIfTheAuthenticatedUserIsASuperUser() throws Exception {
 		Context.authenticate("admin", "test");
 		//expect SQLGrammarException.class since only mySql is supported for now
 		//but we got past the service layer
-		service.generateTestDataSet(null, null, null);
+		service.generateTestDataSet(null);
 	}
 }

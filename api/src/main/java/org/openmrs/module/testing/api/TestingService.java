@@ -34,17 +34,14 @@ import org.springframework.transaction.annotation.Transactional;
 public interface TestingService {
 	
 	/**
-	 * Generates an encrypted SQL dump with test data and metadata.
+	 * Generates an SQL dump with test data and metadata.
 	 * 
 	 * @param out the target
-	 * @param salt the Base64 encoded text to use as salt when encrypting the contents
-	 * @param encryptionkey the secret token to use when encrypting the contents
 	 * @throws APIException
 	 * @should pass if the authenticated user is a super user
 	 * @should fail if the authenticated user is not a super user
 	 */
-	@Authorized()
-	void generateTestDataSet(OutputStream out, String salt, String encryptionkey) throws APIException;
+	void generateTestDataSet(OutputStream out) throws APIException;
 	
 	/**
 	 * Gets the patient with the biggest number of encounters.
