@@ -40,7 +40,10 @@ public interface TestingService {
 	 * @param salt the Base64 encoded text to use as salt when encrypting the contents
 	 * @param encryptionkey the secret token to use when encrypting the contents
 	 * @throws APIException
+	 * @should pass if the authenticated user is a super user
+	 * @should fail if the authenticated user is not a super user
 	 */
+	@Authorized()
 	void generateTestDataSet(OutputStream out, String salt, String encryptionkey) throws APIException;
 	
 	/**

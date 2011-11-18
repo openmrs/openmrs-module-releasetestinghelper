@@ -13,10 +13,17 @@
  */
 package org.openmrs.module.testing.api;
 
+import java.io.OutputStream;
+
+import org.hibernate.exception.SQLGrammarException;
 import org.junit.Before;
 import org.junit.Test;
+import org.openmrs.Role;
+import org.openmrs.api.APIAuthenticationException;
 import org.openmrs.api.context.Context;
 import org.openmrs.test.BaseModuleContextSensitiveTest;
+import org.openmrs.test.Verifies;
+import org.openmrs.util.OpenmrsConstants;
 
 /**
  * Functional tests for {@link TestingService}.
@@ -33,5 +40,27 @@ public class TestingServiceTest extends BaseModuleContextSensitiveTest {
 	@Test
 	public void init() {
 		
+	}
+	
+	/**
+	 * @see {@link TestingService#generateTestDataSet(OutputStream,String,String)}
+	 */
+	@Test(expected = APIAuthenticationException.class)
+	@Verifies(value = "should fail if the authenticated user is not a super user", method = "generateTestDataSet(OutputStream,String,String)")
+	public void generateTestDataSet_shouldFailIfTheAuthenticatedUserIsNotASuperUser() throws Exception {
+		Context.getAuthenticatedUser().removeRole(new Role(OpenmrsConstants.SUPERUSER_ROLE));
+		service.generateTestDataSet(null, null, null);
+	}
+	
+	/**
+	 * @see {@link TestingService#generateTestDataSet(OutputStream,String,String)}
+	 */
+	@Test(expected = SQLGrammarException.class)
+	@Verifies(value = "should pass if the authenticated user is a super user", method = "generateTestDataSet(OutputStream,String,String)")
+	public void generateTestDataSet_shouldPassIfTheAuthenticatedUserIsASuperUser() throws Exception {
+		Context.authenticate("admin", "test");
+		//expect SQLGrammarException.class since only mySql is supported for now
+		//but we got past the service layer
+		service.generateTestDataSet(null, null, null);
 	}
 }

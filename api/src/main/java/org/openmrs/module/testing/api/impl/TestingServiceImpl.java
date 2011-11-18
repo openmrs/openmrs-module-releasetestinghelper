@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import org.openmrs.Patient;
+import org.openmrs.api.APIAuthenticationException;
 import org.openmrs.api.APIException;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.testing.api.TestingService;
@@ -42,6 +43,8 @@ public class TestingServiceImpl implements TestingService {
 	 *      java.lang.String, java.lang.String)
 	 */
 	public void generateTestDataSet(OutputStream out, String salt, String encryptionkey) throws APIException {
+		if (!Context.isAuthenticated() || !Context.getAuthenticatedUser().isSuperUser())
+			throw new APIAuthenticationException("Only users with the System Developer role can generate test data");
 		dao.generateTestDataSet(out, salt, encryptionkey);
 	}
 	
