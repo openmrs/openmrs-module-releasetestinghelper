@@ -36,7 +36,7 @@ public class AdminList extends AdministrationSectionExt {
 	 * @see org.openmrs.module.web.extension.AdministrationSectionExt#getTitle()
 	 */
 	public String getTitle() {
-		return "Testing";
+		return "testing.title";
 	}
 	
 	/**
@@ -46,7 +46,7 @@ public class AdminList extends AdministrationSectionExt {
 		
 		Map<String, String> map = new HashMap<String, String>();
 		
-		map.put("module/testing/settings.form", "Settings");
+		map.put("module/testing/settings.form", "testing.settings");
 		
 		return map;
 	}
