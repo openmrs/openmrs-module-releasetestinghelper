@@ -8,8 +8,7 @@
 </h2>
 <table style="width: 98%;">
 	<tr style="vertical-align: top;">
-		<td class="box"><form:form method="post"
-				commandName="settingsForm">
+		<td class="box"><form method="post">
 				<table>
 					<c:forEach items="${ settingsForm.settings }" var="item"
 						varStatus="status">
@@ -17,12 +16,10 @@
 							<td style="width: 70%;">${ item.name } <br /> <span
 								class="description">${ item.globalProperty.description }</span>
 							</td>
-							<td><form:input
-									path="settings[${status.index}].globalProperty.propertyValue"
+							<td><input type="text" value="${ item.globalProperty.propertyValue }"
+									name="settings[${status.index}].globalProperty.propertyValue"
+									id="settings${status.index}.globalProperty.propertyValue"
 									size="50" maxlength="4000" /></td>
-							<form:errors
-								path="settings[${status.index}].globalProperty.propertyValue"
-								cssClass="error" />
 						</tr>
 					</c:forEach>
 					<tr>
@@ -35,7 +32,7 @@
 							</p></td>
 					</tr>
 				</table>
-			</form:form></td>
+			</form></td>
 	</tr>
 </table>
 
