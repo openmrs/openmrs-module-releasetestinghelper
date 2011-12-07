@@ -11,23 +11,28 @@
  *
  * Copyright (C) OpenMRS, LLC.  All Rights Reserved.
  */
-package org.openmrs.module.testing.web.controller;
+package org.openmrs.module.releasetestinghelper;
 
-import javax.servlet.http.HttpServletResponse;
+import java.util.List;
 
 /**
- * Prepares response headers for writing different data.
+ * Form used by {@link TestingController} for the settings page.
  */
-public class ResponseUtil {
+public class SettingsForm {
 	
-	private ResponseUtil() {
+	private List<SettingsProperty> settings;
+	
+	/**
+	 * @return the settings
+	 */
+	public List<SettingsProperty> getSettings() {
+		return settings;
 	}
 	
-	public static void prepareZipResponse(HttpServletResponse response, String filename) {
-		response.setContentType("application/zip");
-		response.setHeader("Content-Disposition", "attachment; filename=" + filename + ".zip");
-		response.setHeader("Pragma", "No-cache");
-		response.setDateHeader("Expires", 0);
-		response.setHeader("Cache-Control", "no-cache");
+	/**
+	 * @param settings the settings to set
+	 */
+	public void setSettings(List<SettingsProperty> settings) {
+		this.settings = settings;
 	}
 }

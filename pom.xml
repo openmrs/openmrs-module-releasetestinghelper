@@ -3,13 +3,13 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>org.openmrs.module</groupId>
-	<artifactId>testing</artifactId>
+	<artifactId>releasetestinghelper</artifactId>
 	<version>1.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
-	<name>Testing Module</name>
+	<name>Release Testing Helper</name>
 	<description>A module to generate data for release testing.</description>
 	
-	<url>http://openmrs.org</url>
+	<url>https://wiki.openmrs.org/display/docs/Release+Testing+Helper+Module</url>
 
 	<scm>
 		<connection>scm:svn:http://svn.openmrs.org/openmrs-modules/testing/trunk/</connection>

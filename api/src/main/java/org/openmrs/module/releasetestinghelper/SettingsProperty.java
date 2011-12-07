@@ -11,7 +11,7 @@
  *
  * Copyright (C) OpenMRS, LLC.  All Rights Reserved.
  */
-package org.openmrs.module.testing;
+package org.openmrs.module.releasetestinghelper;
 
 import org.apache.commons.lang.StringUtils;
 import org.openmrs.GlobalProperty;

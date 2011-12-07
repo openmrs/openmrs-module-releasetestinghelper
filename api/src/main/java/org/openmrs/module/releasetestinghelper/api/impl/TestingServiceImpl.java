@@ -11,7 +11,7 @@
  *
  * Copyright (C) OpenMRS, LLC.  All Rights Reserved.
  */
-package org.openmrs.module.testing.api.impl;
+package org.openmrs.module.releasetestinghelper.api.impl;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -20,9 +20,9 @@ import org.openmrs.Patient;
 import org.openmrs.api.APIAuthenticationException;
 import org.openmrs.api.APIException;
 import org.openmrs.api.context.Context;
-import org.openmrs.module.testing.api.TestingService;
-import org.openmrs.module.testing.api.db.TestingDao;
-import org.openmrs.module.testing.util.TestingUtil;
+import org.openmrs.module.releasetestinghelper.api.TestingService;
+import org.openmrs.module.releasetestinghelper.api.db.TestingDao;
+import org.openmrs.module.releasetestinghelper.util.TestingUtil;
 
 /**
  * Implements {@link TestingService}.
@@ -39,7 +39,7 @@ public class TestingServiceImpl implements TestingService {
 	}
 	
 	/**
-	 * @see org.openmrs.module.testing.api.TestingService#generateTestDataSet(OutputStream)
+	 * @see org.openmrs.module.releasetestinghelper.api.TestingService#generateTestDataSet(OutputStream)
 	 */
 	public void generateTestDataSet(OutputStream out) throws APIException {
 		if (!Context.isAuthenticated() || !Context.getAuthenticatedUser().isSuperUser())
@@ -49,7 +49,7 @@ public class TestingServiceImpl implements TestingService {
 	}
 	
 	/**
-	 * @see org.openmrs.module.testing.TestingService#getPatientWithMostEncounters()
+	 * @see org.openmrs.module.releasetestinghelper.TestingService#getPatientWithMostEncounters()
 	 */
 	public Patient getPatientWithMostEncounters() {
 		Integer patientId = dao.getPatientWithMostEncounters();
@@ -61,7 +61,7 @@ public class TestingServiceImpl implements TestingService {
 	}
 	
 	/**
-	 * @see org.openmrs.module.testing.TestingService#getPatientWithMostObs()
+	 * @see org.openmrs.module.releasetestinghelper.TestingService#getPatientWithMostObs()
 	 */
 	public Patient getPatientWithMostObs() {
 		Integer patientId = dao.getPatientWithMostEncounters();
@@ -73,7 +73,7 @@ public class TestingServiceImpl implements TestingService {
 	}
 	
 	/**
-	 * @see org.openmrs.module.testing.TestingService#generateModuleZipFile()
+	 * @see org.openmrs.module.releasetestinghelper.TestingService#generateModuleZipFile()
 	 */
 	public byte[] generateModuleZipFile() throws APIException {
 		try {

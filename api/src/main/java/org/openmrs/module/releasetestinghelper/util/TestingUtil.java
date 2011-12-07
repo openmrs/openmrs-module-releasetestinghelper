@@ -11,7 +11,7 @@
  *
  * Copyright (C) OpenMRS, LLC.  All Rights Reserved.
  */
-package org.openmrs.module.testing.util;
+package org.openmrs.module.releasetestinghelper.util;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;

@@ -11,12 +11,12 @@
  *
  * Copyright (C) OpenMRS, LLC.  All Rights Reserved.
  */
-package org.openmrs.module.testing.api.db;
+package org.openmrs.module.releasetestinghelper.api.db;
 
 import java.io.OutputStream;
 
 import org.openmrs.api.db.DAOException;
-import org.openmrs.module.testing.api.TestingService;
+import org.openmrs.module.releasetestinghelper.api.TestingService;
 
 /**
  * Database methods for {@link TestingService}.

@@ -11,7 +11,7 @@
  *
  * Copyright (C) OpenMRS, LLC.  All Rights Reserved.
  */
-package org.openmrs.module.testing;
+package org.openmrs.module.releasetestinghelper;
 
 
 /**
@@ -20,5 +20,5 @@ package org.openmrs.module.testing;
 public class TestingConstants {
 	
 	/** Global property key for maximum number of patients to add to the test dataset */
-	public static final String GP_KEY_MAX_PATIENT_COUNT = "testing.maxPatientCount";
+	public static final String GP_KEY_MAX_PATIENT_COUNT = "releasetestinghelper.maxPatientCount";
 }

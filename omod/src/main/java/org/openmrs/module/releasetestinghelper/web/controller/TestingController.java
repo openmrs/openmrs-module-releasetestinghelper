@@ -11,7 +11,7 @@
  *
  * Copyright (C) OpenMRS, LLC.  All Rights Reserved.
  */
-package org.openmrs.module.testing.web.controller;
+package org.openmrs.module.releasetestinghelper.web.controller;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -20,29 +20,29 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.xerces.impl.dv.util.Base64;
+import org.openmrs.GlobalProperty;
 import org.openmrs.api.APIException;
+import org.openmrs.api.AdministrationService;
 import org.openmrs.api.context.Context;
 import org.openmrs.api.context.ContextAuthenticationException;
-import org.openmrs.module.testing.api.TestingService;
+import org.openmrs.module.releasetestinghelper.SettingsForm;
+import org.openmrs.module.releasetestinghelper.SettingsProperty;
+import org.openmrs.module.releasetestinghelper.TestingConstants;
+import org.openmrs.module.releasetestinghelper.api.TestingService;
 import org.openmrs.web.WebConstants;
-import org.openmrs.module.testing.SettingsForm;
-import org.openmrs.module.testing.SettingsProperty;
-import org.openmrs.module.testing.TestingConstants;
-import org.openmrs.api.AdministrationService;
-import org.openmrs.GlobalProperty;
-import javax.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.FileCopyUtils;
+import org.springframework.validation.Errors;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.validation.Errors;
-import org.springframework.web.bind.annotation.ModelAttribute;
 
 /**
  * The main controller.
@@ -52,7 +52,7 @@ public class TestingController {
 	
 	protected final Log log = LogFactory.getLog(getClass());
 	
-	@RequestMapping(value = "/module/testing/settings", method = RequestMethod.GET)
+	@RequestMapping(value = "/module/releasetestinghelper/settings", method = RequestMethod.GET)
 	public void showSettings() {
 		
 	}
@@ -64,7 +64,7 @@ public class TestingController {
 	 * @throws APIException
 	 * @throws IOException
 	 */
-	@RequestMapping(value = "/module/testing/generateTestDataSet", method = RequestMethod.POST)
+	@RequestMapping(value = "/module/releasetestinghelper/generateTestDataSet", method = RequestMethod.POST)
 	public void generateTestDataSet(HttpServletResponse response, @RequestParam(value = "username") String username,
 	                                @RequestParam(value = "password") String password) throws APIException, IOException {
 		if (authenticateAsSuperUser(username, password, response)) {
@@ -89,7 +89,7 @@ public class TestingController {
 	 * @throws APIException
 	 * @throws IOException
 	 */
-	@RequestMapping(method = RequestMethod.POST, value = "/module/testing/getModules")
+	@RequestMapping(method = RequestMethod.POST, value = "/module/releasetestinghelper/getModules")
 	public void getModules(HttpServletResponse response, @RequestParam(value = "username") String username,
 	                       @RequestParam(value = "password") String password) throws APIException, IOException {
 		
@@ -161,17 +161,17 @@ public class TestingController {
 		}
 	}
 	
-	@RequestMapping(value = "/module/testing/settings", method = RequestMethod.POST)
+	@RequestMapping(value = "/module/releasetestinghelper/settings", method = RequestMethod.POST)
 	public void updateSettings(@ModelAttribute("settingsForm") SettingsForm settingsForm, Errors errors, HttpSession session) {
 		
 		if (errors.hasErrors()) {
-			session.setAttribute(WebConstants.OPENMRS_MSG_ATTR, "testing.settings.not.saved");
+			session.setAttribute(WebConstants.OPENMRS_MSG_ATTR, "releasetestinghelper.settings.not.saved");
 		} else {
 			AdministrationService service = Context.getAdministrationService();
 			for (SettingsProperty property : settingsForm.getSettings()) {
 				service.saveGlobalProperty(property.getGlobalProperty());
 			}
-			session.setAttribute(WebConstants.OPENMRS_MSG_ATTR, "testing.settings.saved");
+			session.setAttribute(WebConstants.OPENMRS_MSG_ATTR, "releasetestinghelper.settings.saved");
 		}
 	}
 }

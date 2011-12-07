@@ -1,10 +1,10 @@
 <%@ include file="/WEB-INF/template/include.jsp"%>
 <openmrs:require privilege="Manage Global Properties"
-	otherwise="/login.htm" redirect="/module/testing/settings.form" />
+	otherwise="/login.htm" redirect="/module/releasetestinghelper/settings.form" />
 <%@ include file="/WEB-INF/template/header.jsp"%>
 
 <h2>
-	<spring:message code="testing.settings.title" />
+	<spring:message code="releasetestinghelper.settings.title" />
 </h2>
 <table style="width: 98%;">
 	<tr style="vertical-align: top;">

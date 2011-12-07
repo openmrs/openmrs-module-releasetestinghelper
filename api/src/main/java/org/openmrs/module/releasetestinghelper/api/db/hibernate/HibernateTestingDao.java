@@ -11,7 +11,7 @@
  *
  * Copyright (C) OpenMRS, LLC.  All Rights Reserved.
  */
-package org.openmrs.module.testing.api.db.hibernate;
+package org.openmrs.module.releasetestinghelper.api.db.hibernate;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,8 +42,8 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.openmrs.api.context.Context;
 import org.openmrs.api.db.DAOException;
-import org.openmrs.module.testing.TestingConstants;
-import org.openmrs.module.testing.api.db.TestingDao;
+import org.openmrs.module.releasetestinghelper.TestingConstants;
+import org.openmrs.module.releasetestinghelper.api.db.TestingDao;
 import org.openmrs.util.OpenmrsConstants;
 
 /**

@@ -11,7 +11,7 @@
  *
  * Copyright (C) OpenMRS, LLC.  All Rights Reserved.
  */
-package org.openmrs.module.testing;
+package org.openmrs.module.releasetestinghelper;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -28,14 +28,14 @@ public class TestingActivator implements Activator {
 	 * @see org.openmrs.module.Activator#startup()
 	 */
 	public void startup() {
-		log.info("Starting Testing Module");
+		log.info("Starting releasetestinghelper Module");
 	}
 	
 	/**
 	 * @see org.openmrs.module.Activator#shutdown()
 	 */
 	public void shutdown() {
-		log.info("Shutting down Testing Module");
+		log.info("Shutting down releasetestinghelper Module");
 	}
 	
 }

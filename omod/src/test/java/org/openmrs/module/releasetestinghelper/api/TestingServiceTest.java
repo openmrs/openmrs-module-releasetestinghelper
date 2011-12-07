@@ -11,7 +11,7 @@
  *
  * Copyright (C) OpenMRS, LLC.  All Rights Reserved.
  */
-package org.openmrs.module.testing.api;
+package org.openmrs.module.releasetestinghelper.api;
 
 import java.io.OutputStream;
 
