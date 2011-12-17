@@ -23,10 +23,12 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.xerces.impl.dv.util.Base64;
 import org.openmrs.GlobalProperty;
+import org.openmrs.User;
 import org.openmrs.api.APIException;
 import org.openmrs.api.AdministrationService;
 import org.openmrs.api.context.Context;
@@ -35,6 +37,7 @@ import org.openmrs.module.releasetestinghelper.SettingsForm;
 import org.openmrs.module.releasetestinghelper.SettingsProperty;
 import org.openmrs.module.releasetestinghelper.TestingConstants;
 import org.openmrs.module.releasetestinghelper.api.TestingService;
+import org.openmrs.util.OpenmrsConstants;
 import org.openmrs.web.WebConstants;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.FileCopyUtils;
@@ -116,7 +119,7 @@ public class TestingController {
 	 * @return true if authentication was successful otherwise false
 	 * @throws IOException
 	 */
-	public boolean authenticateAsSuperUser(String username, String password, HttpServletResponse response)
+	private boolean authenticateAsSuperUser(String username, String password, HttpServletResponse response)
 	    throws IOException {
 		if (log.isDebugEnabled())
 			log.debug("Authenticating user...");
@@ -132,8 +135,7 @@ public class TestingController {
 			}
 		}
 		catch (ContextAuthenticationException e) {
-			//do nothing
-			response.sendError(HttpServletResponse.SC_UNAUTHORIZED,
+			sendErrorResponseWithDelay(response, HttpServletResponse.SC_UNAUTHORIZED,
 			    "Unable to authenticate as a User with the System Developer role. Invalid username or password");
 		}
 		
@@ -173,5 +175,55 @@ public class TestingController {
 			}
 			session.setAttribute(WebConstants.OPENMRS_MSG_ATTR, "releasetestinghelper.settings.saved");
 		}
+	}
+	
+	/**
+	 * Processes requests to verify the username and password
+	 * 
+	 * @param username
+	 * @param password
+	 * @param response
+	 * @throws IOException
+	 */
+	@RequestMapping(value = "/module/releasetestinghelper/verifycredentials", method = RequestMethod.GET)
+	public void verifyCredentials(@RequestParam("username") String username, @RequestParam("password") String password,
+	                              HttpServletResponse response) throws IOException {
+		User user = Context.getUserService().getUserByUsername(username);
+		if (user != null) {
+			String lockoutTimeString = user.getUserProperty(OpenmrsConstants.USER_PROPERTY_LOCKOUT_TIMESTAMP);
+			Long lockoutTime = null;
+			if (StringUtils.isNotBlank(lockoutTimeString) && !lockoutTimeString.equals("0"))
+				lockoutTime = Long.valueOf(lockoutTimeString);
+			
+			// if they've been locked out,  wait 1 hr before processing their next request
+			if (lockoutTime != null && System.currentTimeMillis() - lockoutTime < 3600000) {
+				sendErrorResponseWithDelay(response, HttpServletResponse.SC_FORBIDDEN,
+				    "You have been looked out by the system");
+				return;
+			}
+			
+			authenticateAsSuperUser(Base64.encode(username.getBytes()), Base64.encode(password.getBytes()), response);
+		} else {
+			//We don't know this username
+			sendErrorResponseWithDelay(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid username or password");
+		}
+	}
+	
+	/**
+	 * Sends a response with the specified http code, message after a 5sec delay
+	 * 
+	 * @param response
+	 * @param httpCode
+	 * @param message
+	 * @throws IOException
+	 */
+	private void sendErrorResponseWithDelay(HttpServletResponse response, int httpCode, String message) throws IOException {
+		//delay the response by 5 seconds in case someone brute forces testing of usernames
+		try {
+			Thread.sleep(5000);
+		}
+		catch (InterruptedException e) {}
+		
+		response.sendError(httpCode, message);
 	}
 }
