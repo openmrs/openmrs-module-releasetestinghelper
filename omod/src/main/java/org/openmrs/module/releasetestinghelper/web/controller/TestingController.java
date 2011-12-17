@@ -202,7 +202,7 @@ public class TestingController {
 				return;
 			}
 			
-			authenticateAsSuperUser(Base64.encode(username.getBytes()), Base64.encode(password.getBytes()), response);
+			authenticateAsSuperUser(username, password, response);
 		} else {
 			//We don't know this username
 			sendErrorResponseWithDelay(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid username or password");
