@@ -185,7 +185,7 @@ public class TestingController {
 	 * @param response
 	 * @throws IOException
 	 */
-	@RequestMapping(value = "/module/releasetestinghelper/verifycredentials", method = RequestMethod.GET)
+	@RequestMapping(value = "/module/releasetestinghelper/verifycredentials", method = RequestMethod.POST)
 	public void verifyCredentials(@RequestParam("username") String username, @RequestParam("password") String password,
 	                              HttpServletResponse response) throws IOException {
 		User user = Context.getUserService().getUserByUsername(username);
@@ -195,8 +195,8 @@ public class TestingController {
 			if (StringUtils.isNotBlank(lockoutTimeString) && !lockoutTimeString.equals("0"))
 				lockoutTime = Long.valueOf(lockoutTimeString);
 			
-			// if they've been locked out,  wait 1 hr before processing their next request
-			if (lockoutTime != null && System.currentTimeMillis() - lockoutTime < 3600000) {
+			// if they've been locked out,  wait 30min before processing their next request
+			if (lockoutTime != null && System.currentTimeMillis() - lockoutTime < 1800000) {
 				sendErrorResponseWithDelay(response, HttpServletResponse.SC_FORBIDDEN,
 				    "You have been looked out by the system");
 				return;
