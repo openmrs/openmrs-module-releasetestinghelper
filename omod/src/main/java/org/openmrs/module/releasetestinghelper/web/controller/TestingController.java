@@ -188,7 +188,16 @@ public class TestingController {
 	@RequestMapping(value = "/module/releasetestinghelper/verifycredentials", method = RequestMethod.POST)
 	public void verifyCredentials(@RequestParam("username") String username, @RequestParam("password") String password,
 	                              HttpServletResponse response) throws IOException {
-		User user = Context.getUserService().getUserByUsername(username);
+		
+		User user = null;
+		try {
+			Context.addProxyPrivilege(OpenmrsConstants.PRIV_VIEW_USERS);
+			user = Context.getUserService().getUserByUsername(new String(Base64.decode(username), Charset.forName("UTF-8")));
+		}
+		finally {
+			Context.removeProxyPrivilege(OpenmrsConstants.PRIV_VIEW_USERS);
+		}
+		
 		if (user != null) {
 			String lockoutTimeString = user.getUserProperty(OpenmrsConstants.USER_PROPERTY_LOCKOUT_TIMESTAMP);
 			Long lockoutTime = null;
