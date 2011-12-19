@@ -4,7 +4,7 @@
 
 	<groupId>org.openmrs.module</groupId>
 	<artifactId>releasetestinghelper</artifactId>
-	<version>1.0-SNAPSHOT</version>
+	<version>0.9-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>Release Testing Helper</name>
 	<description>A module to generate data for release testing.</description>
