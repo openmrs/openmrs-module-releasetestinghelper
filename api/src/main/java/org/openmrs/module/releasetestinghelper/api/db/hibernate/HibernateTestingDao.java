@@ -359,7 +359,7 @@ public class HibernateTestingDao implements TestingDao {
 			return Collections.emptyList();
 		}
 		String sql = "SELECT patient_id FROM patient ORDER BY RAND() LIMIT " + limit;
-		return (List<Integer>) sessionFactory.getCurrentSession().createSQLQuery(sql).addScalar("patient_id", Hibernate.INTEGER).list();
+		return (List<Integer>) sessionFactory.getCurrentSession().createSQLQuery(sql).addScalar("patient_id").list();
 	}
 	
 	/**
