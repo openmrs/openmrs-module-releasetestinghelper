@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<module configVersion="1.2">
+	
+    <!-- Module Properties -->
+	<id>releasetestinghelper</id>
+	<name>Release Testing Helper</name>
+	<version>1.0-SNAPSHOT</version>
+	<package>org.openmrs.module.releasetestinghelper</package>
+	<author>OpenMRS</author>
+	<description>
+			A module to generate data for release testing a new system
+	</description>
+	
+	<!-- / Module Properties -->
+	
+	<require_version>1.6</require_version>
+
+
+    <!-- Module Activator -->
+	<activator>org.openmrs.module.releasetestinghelper.TestingActivator</activator>
+
+
+	
+		<!-- Add's link to admin page --> 
+	 <extension>
+	  <point>org.openmrs.admin.list</point>
+	  <class>org.openmrs.module.releasetestinghelper.extension.html.AdminList</class>
+	 </extension>    
+  	  
+  	  	
+  	 <!-- Required Global Properties -->
+	<globalProperty>
+		<property>releasetestinghelper.maxPatientCount</property>
+		<defaultValue>100</defaultValue>
+		<description>The maximum number of patients to add to the test dataset</description>
+	</globalProperty>
+	
+	
+  	<!-- Maps hibernate file's , if present -->   	
+   	<mappingFiles>
+		${omodHbmConfig}
+	</mappingFiles>
+
+	
+	<!-- Internationalization -->
+	<!-- All message codes should start with @MODULE_ID@.* -->
+	<messages>
+		<lang>en</lang>
+		<file>messages.properties</file>
+	</messages>
+	<messages>
+		<lang>fr</lang>
+		<file>messages_fr.properties</file>
+	</messages>
+	<messages>
+		<lang>es</lang>
+		<file>messages_es.properties</file>
+	</messages>
+	<!-- /Internationalization -->
+	
+</module>
+
