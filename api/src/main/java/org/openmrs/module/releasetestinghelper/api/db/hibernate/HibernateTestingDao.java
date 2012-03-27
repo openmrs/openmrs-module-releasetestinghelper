@@ -313,7 +313,12 @@ public class HibernateTestingDao implements TestingDao {
 								if (b < 0) {
 									break;
 								}
-								out.print(b);
+								
+								if (b == '\'') {
+									out.print("''");
+								} else {
+									out.print(b);
+								}
 							}
 							out.print("'");
 							break;
