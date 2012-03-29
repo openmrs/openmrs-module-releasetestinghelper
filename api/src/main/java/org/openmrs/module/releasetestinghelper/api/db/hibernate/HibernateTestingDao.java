@@ -235,119 +235,137 @@ public class HibernateTestingDao implements TestingDao {
 	 */
 	private void dumpDataFromTable(PrintWriter out, Statement st, String table, String where) throws SQLException,
 	    IOException {
-		if (where == null) {
-			where = "";
-		} else {
-			where = " where " + where;
-		}
 		
-		out.println("-- Dumping data for table `" + table + "`");
-		out.println("LOCK TABLES `" + table + "` WRITE;");
-		out.println("/*!40000 ALTER TABLE `" + table + "` DISABLE KEYS */;");
-		boolean first = true;
+		System.out.println("-- Dumping data for table `" + table + "`");
 		
-		String query = "SELECT * FROM " + table + where;
-		
-		ResultSet rs = st.executeQuery(query);
-		ResultSetMetaData md = rs.getMetaData();
-		int numColumns = md.getColumnCount();
-		int rowNum = 0;
-		boolean insert = false;
-		
-		while (rs.next()) {
-			if (rowNum == 0) {
-				insert = true;
-				out.print("INSERT INTO `" + table + "` VALUES ");
-			}
-			++rowNum;
-			if (first) {
-				first = false;
+		try {
+			if (where == null) {
+				where = "";
 			} else {
-				out.print(", ");
+				where = " where " + where;
 			}
-			if (rowNum % 20 == 0) {
-				out.println();
-			}
-			out.print("(");
-			for (int i = 1; i <= numColumns; ++i) {
-				if (i != 1) {
-					out.print(",");
+			
+			out.println("-- Dumping data for table `" + table + "`");
+			out.println("LOCK TABLES `" + table + "` WRITE;");
+			out.println("/*!40000 ALTER TABLE `" + table + "` DISABLE KEYS */;");
+			boolean first = true;
+			
+			String query = "SELECT * FROM " + table + where;
+			
+			ResultSet rs = st.executeQuery(query);
+			ResultSetMetaData md = rs.getMetaData();
+			int numColumns = md.getColumnCount();
+			long rowNum = 0;
+			boolean insert = false;
+			
+			while (rs.next()) {
+				if (rowNum == 0) {
+					insert = true;
+					out.print("INSERT INTO `" + table + "` VALUES ");
 				}
-				if (rs.getObject(i) == null) {
-					out.print("NULL");
+				++rowNum;
+				if (first) {
+					first = false;
 				} else {
-					switch (md.getColumnType(i)) {
-						case Types.VARCHAR:
-						case Types.CHAR:
-						case Types.LONGVARCHAR:
-							out.print("'");
-							out.print(rs.getString(i).replaceAll("\n", "\\\\n").replaceAll("'", "''"));
-							out.print("'");
-							break;
-						case Types.BIGINT:
-						case Types.DECIMAL:
-						case Types.NUMERIC:
-							out.print(rs.getBigDecimal(i));
-							break;
-						case Types.BIT:
-							out.print(rs.getBoolean(i));
-							break;
-						case Types.INTEGER:
-						case Types.SMALLINT:
-						case Types.TINYINT:
-							out.print(rs.getInt(i));
-							break;
-						case Types.REAL:
-						case Types.FLOAT:
-						case Types.DOUBLE:
-							out.print(rs.getDouble(i));
-							break;
-						case Types.BLOB:
-						case Types.VARBINARY:
-						case Types.LONGVARBINARY:
-							Blob blob = rs.getBlob(i);
-							out.print("'");
-							InputStream in = blob.getBinaryStream();
-							while (true) {
-								int b = in.read();
-								if (b < 0) {
-									break;
+					out.print(", ");
+				}
+				if (rowNum % 20 == 0) {
+					out.println();
+				}
+				out.print("(");
+				for (int i = 1; i <= numColumns; ++i) {
+					if (i != 1) {
+						out.print(",");
+					}
+					if (getObject(rs, i) == null) {
+						out.print("NULL");
+					} else {
+						switch (md.getColumnType(i)) {
+							case Types.VARCHAR:
+							case Types.CHAR:
+							case Types.LONGVARCHAR:
+								out.print("'");
+								out.print(rs.getString(i).replaceAll("\n", "\\\\n").replaceAll("'", "''"));
+								out.print("'");
+								break;
+							case Types.BIGINT:
+							case Types.DECIMAL:
+							case Types.NUMERIC:
+								out.print(rs.getBigDecimal(i));
+								break;
+							case Types.BIT:
+								out.print(rs.getBoolean(i));
+								break;
+							case Types.INTEGER:
+							case Types.SMALLINT:
+							case Types.TINYINT:
+								out.print(rs.getInt(i));
+								break;
+							case Types.REAL:
+							case Types.FLOAT:
+							case Types.DOUBLE:
+								out.print(rs.getDouble(i));
+								break;
+							case Types.BLOB:
+							case Types.VARBINARY:
+							case Types.LONGVARBINARY:
+								Blob blob = rs.getBlob(i);
+								out.print("'");
+								InputStream in = blob.getBinaryStream();
+								while (true) {
+									int b = in.read();
+									if (b < 0) {
+										break;
+									}
+									
+									if (b == '\'') {
+										out.print("''");
+									} else {
+										out.print(b);
+									}
 								}
-								
-								if (b == '\'') {
-									out.print("''");
-								} else {
-									out.print(b);
-								}
-							}
-							out.print("'");
-							break;
-						case Types.CLOB:out.print("'");
-							out.print(rs.getString(i).replaceAll("\n", "\\\\n").replaceAll("'", "''"));
-							out.print("'");
-							break;
-						case Types.DATE:
-							out.print("'" + rs.getDate(i) + "'");
-							break;
-						case Types.TIMESTAMP:
-							out.print("'" + rs.getTimestamp(i) + "'");
-							break;
-						default:
-							throw new RuntimeException("TODO: handle type code " + md.getColumnType(i) + " (name "
-							        + md.getColumnTypeName(i) + ")");
+								out.print("'");
+								break;
+							case Types.CLOB:out.print("'");
+								out.print(rs.getString(i).replaceAll("\n", "\\\\n").replaceAll("'", "''"));
+								out.print("'");
+								break;
+							case Types.DATE:
+								out.print("'" + rs.getDate(i) + "'");
+								break;
+							case Types.TIMESTAMP:
+								out.print("'" + rs.getTimestamp(i) + "'");
+								break;
+							default:
+								throw new RuntimeException("TODO: handle type code " + md.getColumnType(i) + " (name "
+								        + md.getColumnTypeName(i) + ")");
+						}
 					}
 				}
+				out.print(")");
 			}
-			out.print(")");
+			if (insert) {
+				out.println(";");
+				insert = false;
+			}
+			
+			out.println("/*!40000 ALTER TABLE `" + table + "` ENABLE KEYS */;");
+			out.println("UNLOCK TABLES;");
+			out.println();
 		}
-		if (insert) {
-			out.println(";");
-			insert = false;
+		catch(Exception ex){
+			ex.printStackTrace();
 		}
-		
-		out.println("/*!40000 ALTER TABLE `" + table + "` ENABLE KEYS */;");
-		out.println("UNLOCK TABLES;");
-		out.println();
+	}
+	
+	private Object getObject(ResultSet rs, int columnIndex) {
+		try{
+			return rs.getObject(columnIndex);
+		}
+		catch(SQLException ex){
+			ex.printStackTrace();
+			return null;
+		}
 	}
 	
 	/**
