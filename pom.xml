@@ -4,7 +4,7 @@
 
 	<groupId>org.openmrs.module</groupId>
 	<artifactId>releasetestinghelper</artifactId>
-	<version>1.1</version>
+	<version>1.2-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>Release Testing Helper</name>
 	<description>A module to generate data for release testing.</description>
@@ -12,9 +12,9 @@
 	<url>https://wiki.openmrs.org/display/docs/Release+Testing+Helper+Module</url>
 
 	<scm>
-		<connection>scm:svn:http://svn.openmrs.org/openmrs-modules/releasetestinghelper/tags/1.1</connection>
-		<developerConnection>scm:svn:http://svn.openmrs.org/openmrs-modules/releasetestinghelper/tags/1.1</developerConnection>
-		<url>http://svn.openmrs.org/openmrs-modules/releasetestinghelper/tags/1.1</url>
+		<connection>scm:svn:http://svn.openmrs.org/openmrs-modules/releasetestinghelper/trunk</connection>
+		<developerConnection>scm:svn:http://svn.openmrs.org/openmrs-modules/releasetestinghelper/trunk</developerConnection>
+		<url>http://svn.openmrs.org/openmrs-modules/releasetestinghelper/trunk</url>
 	</scm>
 
 
