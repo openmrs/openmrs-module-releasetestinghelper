@@ -36,7 +36,6 @@ import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.hibernate.Hibernate;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -66,7 +65,7 @@ public class HibernateTestingDao implements TestingDao {
 		ZipOutputStream zip = null;
 		try {
 			zip = new ZipOutputStream(os);
-			zip.putNextEntry(new ZipEntry("data.txt"));
+			zip.putNextEntry(new ZipEntry("db.dump"));
 			
 			OutputStreamWriter osWriter = new OutputStreamWriter(zip, "UTF-8");
 			PrintWriter out = new PrintWriter(osWriter);
@@ -93,7 +92,7 @@ public class HibernateTestingDao implements TestingDao {
 			List<String> tablesToDump = new ArrayList<String>();
 			Session session = sessionFactory.getCurrentSession();
 			String schema = (String) session.createSQLQuery("select schema()").uniqueResult();
-			log.warn("schema: " + schema);
+			log.info("Schema: " + schema);
 			// Get all tables that we'll need to dump
 			{
 				Query query = session
@@ -104,7 +103,7 @@ public class HibernateTestingDao implements TestingDao {
 					tablesToDump.add(tableName);
 				}
 			}
-			log.warn("tables to dump: " + tablesToDump);
+			log.info("Tables to dump: " + tablesToDump);
 			
 			Set<String> personIds = new HashSet<String>();
 			
@@ -118,20 +117,23 @@ public class HibernateTestingDao implements TestingDao {
 				personIds.add(mostObs.toString());
 			}
 			
-			String maxPatientCount = Context.getAdministrationService().getGlobalProperty(TestingConstants.GP_KEY_MAX_PATIENT_COUNT, "0");
+			String maxPatientCount = Context.getAdministrationService().getGlobalProperty(
+			    TestingConstants.GP_KEY_MAX_PATIENT_COUNT, "0");
 			if (StringUtils.isBlank(maxPatientCount)) {
 				maxPatientCount = "0";
 			}
 			
 			List<Integer> randomPersonIds = getRandomPatients(Integer.valueOf(maxPatientCount) - 2);
 			for (Integer personId : randomPersonIds) {
-	            personIds.add(personId.toString());
-            }
+				personIds.add(personId.toString());
+			}
 			
 			@SuppressWarnings("deprecation")
 			Connection conn = sessionFactory.getCurrentSession().connection();
 			try {
-				Statement st = conn.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
+				Statement st = conn.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY,
+				    java.sql.ResultSet.CONCUR_READ_ONLY);
+				st.setFetchSize(Integer.MIN_VALUE);
 				
 				for (String table : tablesToDump) {
 					out.println();
@@ -198,6 +200,8 @@ public class HibernateTestingDao implements TestingDao {
 					} else if ("drug_order".equals(table)) {
 						dumpDataFromTable(out, st, table, "order_id IN (SELECT order_id FROM orders WHERE patient_id IN ("
 						        + joinedPersonIds + "))");
+					} else if ("formentry_xsn".equals(table)){
+						dumpDataFromTable(out, st, table, "archived = 0");
 					} else {
 						dumpDataFromTable(out, st, table, null);
 					}
@@ -235,144 +239,129 @@ public class HibernateTestingDao implements TestingDao {
 	 */
 	private void dumpDataFromTable(PrintWriter out, Statement st, String table, String where) throws SQLException,
 	    IOException {
+		if (where == null) {
+			where = "";
+		} else {
+			where = " where " + where;
+		}
 		
-		System.out.println("-- Dumping data for table `" + table + "`");
+		log.info("Dumping data for table " + table);
 		
-		try {
-			if (where == null) {
-				where = "";
+		out.println("-- Dumping data for table `" + table + "`");
+		out.println("LOCK TABLES `" + table + "` WRITE;");
+		out.println("/*!40000 ALTER TABLE `" + table + "` DISABLE KEYS */;");
+		boolean first = true;
+		
+		String query = "SELECT * FROM " + table + where;
+		
+		ResultSet rs = st.executeQuery(query);
+		ResultSetMetaData md = rs.getMetaData();
+		int numColumns = md.getColumnCount();
+		int rowNum = 0;
+		boolean insert = false;
+		
+		while (rs.next()) {
+			if (rowNum == 0) {
+				insert = true;
+				out.print("INSERT INTO `" + table + "` VALUES ");
+			}
+			++rowNum;
+			if (first) {
+				first = false;
 			} else {
-				where = " where " + where;
+				out.print(", ");
 			}
-			
-			out.println("-- Dumping data for table `" + table + "`");
-			out.println("LOCK TABLES `" + table + "` WRITE;");
-			out.println("/*!40000 ALTER TABLE `" + table + "` DISABLE KEYS */;");
-			boolean first = true;
-			
-			String query = "SELECT * FROM " + table + where;
-			
-			ResultSet rs = st.executeQuery(query);
-			ResultSetMetaData md = rs.getMetaData();
-			int numColumns = md.getColumnCount();
-			long rowNum = 0;
-			boolean insert = false;
-			
-			while (rs.next()) {
-				if (rowNum == 0) {
-					insert = true;
-					out.print("INSERT INTO `" + table + "` VALUES ");
+			if (rowNum % 20 == 0) {
+				out.println();
+			}
+			out.print("(");
+			for (int i = 1; i <= numColumns; ++i) {
+				if (i != 1) {
+					out.print(",");
 				}
-				++rowNum;
-				if (first) {
-					first = false;
+				if (rs.getObject(i) == null) {
+					out.print("NULL");
 				} else {
-					out.print(", ");
-				}
-				if (rowNum % 20 == 0) {
-					out.println();
-				}
-				out.print("(");
-				for (int i = 1; i <= numColumns; ++i) {
-					if (i != 1) {
-						out.print(",");
-					}
-					if (getObject(rs, i) == null) {
-						out.print("NULL");
-					} else {
-						switch (md.getColumnType(i)) {
-							case Types.VARCHAR:
-							case Types.CHAR:
-							case Types.LONGVARCHAR:
-								out.print("'");
-								out.print(rs.getString(i).replaceAll("\n", "\\\\n").replaceAll("'", "''"));
-								out.print("'");
-								break;
-							case Types.BIGINT:
-							case Types.DECIMAL:
-							case Types.NUMERIC:
-								out.print(rs.getBigDecimal(i));
-								break;
-							case Types.BIT:
-								out.print(rs.getBoolean(i));
-								break;
-							case Types.INTEGER:
-							case Types.SMALLINT:
-							case Types.TINYINT:
-								out.print(rs.getInt(i));
-								break;
-							case Types.REAL:
-							case Types.FLOAT:
-							case Types.DOUBLE:
-								out.print(rs.getDouble(i));
-								break;
-							case Types.BLOB:
-							case Types.VARBINARY:
-							case Types.LONGVARBINARY:
-								Blob blob = rs.getBlob(i);
-								out.print("'");
-								InputStream in = blob.getBinaryStream();
-								while (true) {
-									int b = in.read();
-									if (b < 0) {
-										break;
-									}
-									
-									if (b == '\'') {
-										out.print("''");
-									} else {
-										out.print(b);
-									}
+					switch (md.getColumnType(i)) {
+						case Types.VARCHAR:
+						case Types.CHAR:
+						case Types.LONGVARCHAR:
+							out.print("'");
+							out.print(rs.getString(i).replaceAll("\\\\", "\\\\\\\\").replaceAll("'", "\\\\'"));
+							out.print("'");
+							break;
+						case Types.BIGINT:
+						case Types.DECIMAL:
+						case Types.NUMERIC:
+							out.print(rs.getBigDecimal(i));
+							break;
+						case Types.BIT:
+							out.print(rs.getBoolean(i));
+							break;
+						case Types.INTEGER:
+						case Types.SMALLINT:
+						case Types.TINYINT:
+							out.print(rs.getInt(i));
+							break;
+						case Types.REAL:
+						case Types.FLOAT:
+						case Types.DOUBLE:
+							out.print(rs.getDouble(i));
+							break;
+						case Types.BLOB:
+						case Types.VARBINARY:
+						case Types.LONGVARBINARY:
+							Blob blob = rs.getBlob(i);
+							out.print("'");
+							InputStream in = blob.getBinaryStream();
+							while (true) {
+								int b = in.read();
+								if (b < 0) {
+									break;
 								}
-								out.print("'");
-								break;
-							case Types.CLOB:out.print("'");
-								out.print(rs.getString(i).replaceAll("\n", "\\\\n").replaceAll("'", "''"));
-								out.print("'");
-								break;
-							case Types.DATE:
-								out.print("'" + rs.getDate(i) + "'");
-								break;
-							case Types.TIMESTAMP:
-								out.print("'" + rs.getTimestamp(i) + "'");
-								break;
-							default:
-								throw new RuntimeException("TODO: handle type code " + md.getColumnType(i) + " (name "
-								        + md.getColumnTypeName(i) + ")");
-						}
+								char c = (char) b;
+								if (c == '\'') {
+									out.print("\\'");
+								} else {
+									out.print(c);
+								}
+							}
+							out.print("'");
+							break;
+						case Types.CLOB:
+							out.print("'");
+							out.print(rs.getString(i).replaceAll("\\\\", "\\\\\\\\").replaceAll("'", "\\\\'"));
+							out.print("'");
+							break;
+						case Types.DATE:
+							out.print("'" + rs.getDate(i) + "'");
+							break;
+						case Types.TIMESTAMP:
+							out.print("'" + rs.getTimestamp(i) + "'");
+							break;
+						default:
+							throw new RuntimeException("TODO: handle type code " + md.getColumnType(i) + " (name "
+							        + md.getColumnTypeName(i) + ")");
 					}
 				}
-				out.print(")");
 			}
-			if (insert) {
-				out.println(";");
-				insert = false;
-			}
-			
-			out.println("/*!40000 ALTER TABLE `" + table + "` ENABLE KEYS */;");
-			out.println("UNLOCK TABLES;");
-			out.println();
+			out.print(")");
 		}
-		catch(Exception ex){
-			ex.printStackTrace();
+		if (insert) {
+			out.println(";");
+			insert = false;
 		}
-	}
-	
-	private Object getObject(ResultSet rs, int columnIndex) {
-		try{
-			return rs.getObject(columnIndex);
-		}
-		catch(SQLException ex){
-			ex.printStackTrace();
-			return null;
-		}
+		
+		out.println("/*!40000 ALTER TABLE `" + table + "` ENABLE KEYS */;");
+		out.println("UNLOCK TABLES;");
+		out.println();
 	}
 	
 	/**
 	 * @see TestingDAO#getRandomPatients()
 	 */
 	@SuppressWarnings("unchecked")
-    public List<Integer> getRandomPatients(Integer limit) {
+	public List<Integer> getRandomPatients(Integer limit) {
 		if (limit <= 0) {
 			return Collections.emptyList();
 		}

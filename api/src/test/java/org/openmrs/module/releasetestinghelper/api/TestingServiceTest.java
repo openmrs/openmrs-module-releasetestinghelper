@@ -37,11 +37,6 @@ public class TestingServiceTest extends BaseModuleContextSensitiveTest {
 		service = Context.getService(TestingService.class);
 	}
 	
-	@Test
-	public void init() {
-		
-	}
-	
 	/**
 	 * @see {@link TestingService#generateTestDataSet(OutputStream)}
 	 */
