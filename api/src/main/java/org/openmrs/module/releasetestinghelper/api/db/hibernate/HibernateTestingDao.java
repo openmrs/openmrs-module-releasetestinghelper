@@ -311,22 +311,16 @@ public class HibernateTestingDao implements TestingDao {
 						case Types.BLOB:
 						case Types.VARBINARY:
 						case Types.LONGVARBINARY:
+							out.print("0x");
 							Blob blob = rs.getBlob(i);
-							out.print("'");
 							InputStream in = blob.getBinaryStream();
 							while (true) {
 								int b = in.read();
 								if (b < 0) {
 									break;
 								}
-								char c = (char) b;
-								if (c == '\'') {
-									out.print("\\'");
-								} else {
-									out.print(c);
-								}
+								out.print(String.format("%02x", b));
 							}
-							out.print("'");
 							break;
 						case Types.CLOB:
 							out.print("'");
