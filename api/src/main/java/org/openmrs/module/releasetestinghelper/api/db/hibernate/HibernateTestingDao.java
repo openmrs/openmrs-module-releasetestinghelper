@@ -319,6 +319,7 @@ public class HibernateTestingDao implements TestingDao {
 								if (b < 0) {
 									break;
 								}
+								//MySQL expects two chars for a byte
 								out.print(String.format("%02x", b));
 							}
 							break;
