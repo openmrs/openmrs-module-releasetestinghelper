@@ -5,7 +5,7 @@
     <!-- Module Properties -->
 	<id>releasetestinghelper</id>
 	<name>Release Testing Helper</name>
-	<version>1.1-SNAPSHOT</version>
+	<version>${project.parent.version}</version>
 	<package>org.openmrs.module.releasetestinghelper</package>
 	<author>OpenMRS</author>
 	<description>
