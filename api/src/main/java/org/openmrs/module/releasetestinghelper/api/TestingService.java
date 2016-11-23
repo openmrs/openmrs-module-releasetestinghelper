@@ -18,7 +18,7 @@ import java.io.OutputStream;
 import org.openmrs.Patient;
 import org.openmrs.annotation.Authorized;
 import org.openmrs.api.APIException;
-import org.openmrs.util.OpenmrsConstants;
+import org.openmrs.util.PrivilegeConstants;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -67,6 +67,6 @@ public interface TestingService {
 	 * @return an array of bytes for the zip contents.
 	 */
 	@Transactional(readOnly = true)
-	@Authorized(OpenmrsConstants.PRIV_MANAGE_MODULES)
+	@Authorized(PrivilegeConstants.MANAGE_MODULES)
 	public byte[] generateModuleZipFile() throws APIException;
 }

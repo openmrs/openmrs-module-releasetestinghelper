@@ -18,6 +18,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.lang.reflect.Method;
 import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -44,6 +45,7 @@ import org.openmrs.api.db.DAOException;
 import org.openmrs.module.releasetestinghelper.TestingConstants;
 import org.openmrs.module.releasetestinghelper.api.db.TestingDao;
 import org.openmrs.util.OpenmrsConstants;
+import org.springframework.util.ReflectionUtils;
 
 /**
  * Hibernate specific implementation for {@link TestingDao}.
@@ -90,7 +92,7 @@ public class HibernateTestingDao implements TestingDao {
 			out.println("");
 			
 			List<String> tablesToDump = new ArrayList<String>();
-			Session session = sessionFactory.getCurrentSession();
+			Session session = getCurrentSession();
 			String schema = (String) session.createSQLQuery("select schema()").uniqueResult();
 			log.info("Schema: " + schema);
 			// Get all tables that we'll need to dump
@@ -128,8 +130,7 @@ public class HibernateTestingDao implements TestingDao {
 				personIds.add(personId.toString());
 			}
 			
-			@SuppressWarnings("deprecation")
-			Connection conn = sessionFactory.getCurrentSession().connection();
+			Connection conn = getConnection();
 			try {
 				Statement st = conn.createStatement(java.sql.ResultSet.TYPE_FORWARD_ONLY,
 				    java.sql.ResultSet.CONCUR_READ_ONLY);
@@ -361,7 +362,7 @@ public class HibernateTestingDao implements TestingDao {
 			return Collections.emptyList();
 		}
 		String sql = "SELECT patient_id FROM patient ORDER BY RAND() LIMIT " + limit;
-		return (List<Integer>) sessionFactory.getCurrentSession().createSQLQuery(sql).addScalar("patient_id").list();
+		return (List<Integer>)getCurrentSession().createSQLQuery(sql).addScalar("patient_id").list();
 	}
 	
 	/**
@@ -373,7 +374,7 @@ public class HibernateTestingDao implements TestingDao {
 		        + "(select max(the_count) from (select patient_id, count(patient_id) as the_count from encounter "
 		        + "group by patient_id) as t) limit 1";
 		
-		return (Integer) sessionFactory.getCurrentSession().createSQLQuery(sql).uniqueResult();
+		return (Integer)getCurrentSession().createSQLQuery(sql).uniqueResult();
 	}
 	
 	/**
@@ -386,6 +387,37 @@ public class HibernateTestingDao implements TestingDao {
 		        + "(select patient_id, count(obs_id) as the_count from encounter e "
 		        + "inner join obs o on e.encounter_id = o.encounter_id " + "group by patient_id) as t) limit 1";
 		
-		return (Integer) sessionFactory.getCurrentSession().createSQLQuery(sql).uniqueResult();
+		return (Integer)getCurrentSession().createSQLQuery(sql).uniqueResult();
+	}
+	
+	public Connection getConnection() {
+        try {
+            // reflective lookup to bridge between Hibernate 3.x and 4.x
+            Method connectionMethod = getCurrentSession().getClass().getMethod("connection");
+            return (Connection) ReflectionUtils.invokeMethod(connectionMethod, getCurrentSession());
+        }
+        catch (NoSuchMethodException ex) {
+            throw new IllegalStateException("Cannot find connection() method on Hibernate session", ex);
+        }
+    }
+	
+	/**
+	 * Gets the current hibernate session while taking care of the hibernate 3 and 4 differences.
+	 * 
+	 * @return the current hibernate session.
+	 */
+	private org.hibernate.Session getCurrentSession() {
+		try {
+			return sessionFactory.getCurrentSession();
+		}
+		catch (NoSuchMethodError ex) {
+			try {
+				Method method = sessionFactory.getClass().getMethod("getCurrentSession", null);
+				return (org.hibernate.Session)method.invoke(sessionFactory, null);
+			}
+			catch (Exception e) {
+				throw new RuntimeException("Failed to get the current hibernate session", e);
+			}
+		}
 	}
 }
